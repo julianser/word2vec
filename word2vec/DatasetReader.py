@@ -13,6 +13,8 @@ from TokenSelector import TokenSelector
 
 
 class DatasetReader(object):
+
+
 	def __init__(
 			self,
 			files=[],

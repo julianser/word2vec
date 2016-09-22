@@ -11,7 +11,7 @@ else:
 	from theano import shared, tensor as T
 
 
-class TheanoMinibatcher(object):
+class Minibatcher(object):
 	'''
 	This generates a theano shared variable storing the full dataset
 	-- all training examples.  When the theano device setting is the

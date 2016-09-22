@@ -9,9 +9,10 @@ it just means memory would be wasted)
 """
 
 import numpy as np
+import gzip
 
 
-class WordSampler(object):
+class Sampler(object):
 	def __init__(self, counts=[]):
 		"""
 		Create a CounterSampler.  Most common usage is to provide no
@@ -140,3 +141,22 @@ class WordSampler(object):
 		"""
 		self.ensure_prepared()
 		return self.probabilities[token_id]
+
+	def save(self, filename):
+		"""Saves Sampler"""
+		if filename.endswith('.gz'):
+			f = gzip.open(filename, 'w')
+		else:
+			f = open(filename, 'w')
+
+		for c in self.counts:
+			f.write('%d\n' % c)
+
+	def load(self, filename):
+		"""Loads Sampler"""
+		if filename.endswith('.gz'):
+			f = gzip.open(filename)
+		else:
+			f = open(filename)
+
+		self.counts = [int(c) for c in f.readlines()]

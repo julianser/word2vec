@@ -2,6 +2,8 @@
 The TokenMap provides a bi-directional mapping between tokens and IDs
 """
 
+import gzip
+
 SILENT = 0
 WARN = 1
 ERROR = 2
@@ -121,3 +123,28 @@ class TokenMap(object):
 	def __len__(self):
 		"""Gets the length of the Map"""
 		return len(self.tokens)
+
+	def save(self, filename):
+		"""Saves TokenMap"""
+		if filename.endswith('.gz'):
+			f = gzip.open(filename, 'w')
+		else:
+			f = open(filename, 'w')
+
+		for idx, token in enumerate(self.tokens):
+			f.write(token + '\n')
+
+	def load(self, filename):
+		"""Loads TokenMap"""
+		self.map = {}
+		self.tokens = []
+
+		if filename.endswith('.gz'):
+			f = gzip.open(filename)
+		else:
+			f = gzip.open(filename)
+
+		for idx, line in enumerate(f):
+			token = line.strip()
+			self.map[token] = idx
+			self.tokens.append(token)

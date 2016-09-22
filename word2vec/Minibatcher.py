@@ -8,7 +8,7 @@ if exclude_theano_set and int(os.environ['EXCLUDE_THEANO']) == 1:
 	pass
 else:
 	# Do import theano and lasagne
-	from theano import shared, tensor as T
+	from theano import shared
 
 
 class Minibatcher(object):
@@ -86,7 +86,6 @@ class Minibatcher(object):
 		# Define an update that moves the batch window through the dataset
 		self.updates = [(self.batch_num, self.batch_num+1)]
 
-
 	def load_dataset(self, dataset):
 		# Load the dataset onto the gpu
 		self.dataset.set_value(dataset)
@@ -102,3 +101,4 @@ class Minibatcher(object):
 
 	def get_num_batches(self):
 		return self.num_batches
+

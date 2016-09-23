@@ -28,7 +28,7 @@ class Minibatcher(object):
 	The indexing that causes the symbolic minibatch to address different
 	parts of the dataset is itself a shared variable, and it can be
 	updated using an update tuple provided to the updates list of a
-	theanod function.  The necessary update tuple is also provided as
+	theano function.  The necessary update tuple is also provided as
 	a return value, so that it can be incorporated into the training
 	function
 	'''

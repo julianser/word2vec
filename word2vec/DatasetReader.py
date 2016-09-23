@@ -20,7 +20,6 @@ class DatasetReader(object):
 			files=[],
 			directories=[],
 			skip=[],
-			noise_ratio=15,
 			t=1e-5,
 			num_processes=3,
 			unigram_dictionary=None,
@@ -38,7 +37,6 @@ class DatasetReader(object):
 		self.directories = directories
 		self.skip = [re.compile(s) for s in skip]
 		self.t = t
-		self.noise_ratio = noise_ratio
 		self.num_processes = num_processes
 		self.kernel = kernel
 		self.max_queue_size = max_queue_size

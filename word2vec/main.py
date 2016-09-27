@@ -32,7 +32,7 @@ def main(files, batch_size, emb_dim_size):
     minibatcher = Minibatcher(
         batch_size=batch_size,
         dtype="int32",
-        num_dims=1)
+        num_dims=2)
 
     query_input = T.ivector('query')
     context_output = T.ivector('context')
@@ -56,9 +56,6 @@ def main(files, batch_size, emb_dim_size):
                                context_output)
     loss = loss.mean()
     params = word2vec.get_all_params()
-
-    import pdb
-    pdb.set_trace()
 
     updates = nesterov_momentum(loss,
                                 params,

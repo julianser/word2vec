@@ -29,7 +29,7 @@ class Word2VecBase:
         return L.get_output(self.network)
 
     def get_all_params(self):
-        L.get_all_params(self.network, trainable=True)
+        return L.get_all_params(self.network, trainable=True)
 
 
 class Word2VecNormal(Word2VecBase):

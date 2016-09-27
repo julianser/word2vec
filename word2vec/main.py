@@ -63,26 +63,20 @@ def main(files, batch_size, emb_dim_size):
                                 momentum)
     updates.update(minibatcher.get_updates())
 
-    train = theano.function([query_input, context_output],
+    train = theano.function([],
                             loss,
                             updates=updates)
 
     for epoch in range(num_epochs):
         #batches = reader.generate_dataset_parallel()
         batches = reader.generate_dataset_serial()
-
         for batch_num, batch in enumerate(batches):
-
             minibatcher.load_dataset(batch)
-            train_err = 0
+            losses = []
             for minibatch_num in range(minibatcher.get_num_batches()):
-                batch_rows = minibatcher.get_batch()
-                queries = batch_rows[:,0]
-                contexts = batch_rows[:,1]
-                train_err += train(queries, contexts)
-
-            print('batch {} train error {}'.format(batch_num,
-                                                   train_err))
+                print 'running minibatch', batch_num
+                losses.append(train())
+            print('batch {} Mean Loss {}'.format(batch_num,np.mean(losses)))
 
     print word2vec.embed('hello')
 

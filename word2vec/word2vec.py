@@ -7,23 +7,20 @@ from lasagne import layers as L
 
 
 class Word2VecBase:
-    __metaclass__ = ABCMeta
-
     def __init__(self, batch_size, query_input, query_vocab_size, context_vocab_size,
                  emb_dim_size):
         """
         initialize the train and embed methods
         """
-        self.embedding, self.network = self.model(batch_size,
+        embed_network, self.network = self.model(batch_size,
                                         query_input,
                                         query_vocab_size,
                                         context_vocab_size,
                                         emb_dim_size)
 
-        embedding = L.get_output(embedding)
-        self.embed = theano.function([self.query_input], self.embedding)
+        embedding = L.get_output(embed_network)
+        self.embed = theano.function([query_input], embedding)
 
-    @abstractmethod
     def model(self, batch_size, query_input, query_vocab_size,
               context_vocab_size, emb_dim_size):
         raise NotImplementedError

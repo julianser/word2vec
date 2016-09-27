@@ -12,6 +12,25 @@ import os
 from token_selector import TokenSelector
 
 
+def default_parse(filename, verbose=True):
+	"""
+	Parses input corpus files into a file-format-independent in-memory
+	representation.  The output of this function is passed into
+	`build_examples` for any processing that is needed, irrespective of
+	file format, to generate examples form the stored data.
+
+	INPUTS
+	* filename [str]: path to a corpus file to be read
+
+	RETURNS
+	* [any]: file-format-independent representation of training data.
+	"""
+	tokenized_sentences = []
+	for line in open(filename):
+		tokenized_sentences.append(line.lower().strip().split())
+	return tokenized_sentences
+
+
 class DatasetReader(object):
 
 
@@ -497,25 +516,6 @@ class DataSetReaderIllegalStateException(Exception):
 	that was not initialized with a UnigramDictionary.
 	"""
 	pass
-
-
-def default_parse(filename, verbose=True):
-	"""
-	Parses input corpus files into a file-format-independent in-memory
-	representation.  The output of this function is passed into
-	`build_examples` for any processing that is needed, irrespective of
-	file format, to generate examples form the stored data.
-
-	INPUTS
-	* filename [str]: path to a corpus file to be read
-
-	RETURNS
-	* [any]: file-format-independent representation of training data.
-	"""
-	tokenized_sentences = []
-	for line in open(filename):
-		tokenized_sentences.append(line.lower().strip().split())
-	return tokenized_sentences
 
 
 def numpyify(examples):

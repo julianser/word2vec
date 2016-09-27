@@ -47,10 +47,10 @@ def main(files, batch_size, emb_dim_size):
     # context_output.tag.test_value = test_c
 
     word2vec = Word2VecNormal(batch_size,
-                              query_input,
-                              reader.get_vocab_size(),
-                              reader.get_vocab_size(),
-                              emb_dim_size)
+                              query_input=minibatcher.get_batch(),
+                              context_vocab_size=reader.get_vocab_size(),
+                              query_vocab_size=reader.get_vocab_size(),
+                              emb_dim_size=emb_dim_size)
 
     prediction = word2vec.get_output()
     loss = binary_crossentropy(prediction,

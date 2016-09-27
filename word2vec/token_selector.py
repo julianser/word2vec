@@ -1,4 +1,4 @@
-from Sampler import Sampler
+from sampler import Sampler
 
 
 class TokenSelector(object):

@@ -1,5 +1,5 @@
-from DatasetReader import DatasetReader, default_parse
-from Minibatcher import Minibatcher
+from dataset_reader import DatasetReader, default_parse
+from minibatcher import Minibatcher
 
 
 def main():

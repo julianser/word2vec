@@ -5,11 +5,11 @@
 import re
 from iterable_queue import IterableQueue
 from multiprocessing import Process
-from TokenMap import UNK
-from UnigramDictionary import UnigramDictionary
+from token_map import UNK
+from unigram_dictionary import UnigramDictionary
 import numpy as np
 import os
-from TokenSelector import TokenSelector
+from token_selector import TokenSelector
 
 
 class DatasetReader(object):

@@ -4,8 +4,8 @@
 '''
 
 import os
-from TokenMap import TokenMap, SILENT, WARN, ERROR, UNK
-from Sampler import Sampler
+from token_map import TokenMap, SILENT, WARN, ERROR, UNK
+from sampler import Sampler
 
 
 class UnigramDictionary(object):

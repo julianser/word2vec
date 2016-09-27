@@ -1,4 +1,5 @@
 import time
+import numpy as np
 
 import theano
 from theano import tensor as T
@@ -11,6 +12,8 @@ from dataset_reader import DatasetReader
 from minibatcher import Minibatcher
 
 
+theano.config.compute_test_value = 'warn'
+
 def main(files, batch_size, emb_dim_size):
     learning_rate = 0.1
     momentum = 0.9
@@ -22,6 +25,8 @@ def main(files, batch_size, emb_dim_size):
         min_frequency=0,
         verbose=True)
 
+    reader.prepare()
+
     minibatcher = Minibatcher(
         batch_size=batch_size,
         dtype="int32",
@@ -30,12 +35,22 @@ def main(files, batch_size, emb_dim_size):
     query_input = T.ivector('query')
     context_output = T.ivector('context')
 
+    ### TESTING
+    test_q = np.zeros(reader.get_vocab_size(), dtype=np.int32)
+    test_q[5] = 1
+    query_input.tag.test_value = test_q
+    test_c = np.zeros(reader.get_vocab_size(), dtype=np.int32)
+    test_c[9] = 1
+    context_output.tag.test_value = test_c
+
     word2vec = Word2VecNormal(batch_size,
                               query_input,
                               reader.get_vocab_size(),
                               reader.get_vocab_size(),
                               emb_dim_size)
 
+    # import pdb
+    # pdb.set_trace()
     prediction = word2vec.get_output()
     loss = categorical_crossentropy(prediction,
                                context_output)

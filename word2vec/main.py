@@ -12,6 +12,7 @@ from dataset_reader import DatasetReader
 from minibatcher import Minibatcher
 
 
+theano.config.exception_verbosity = 'high'
 # theano.config.compute_test_value = 'warn'
 
 def main(files, batch_size, emb_dim_size):
@@ -65,7 +66,7 @@ def main(files, batch_size, emb_dim_size):
 
     train = theano.function([],
                             loss,
-                            updates=updates)
+                            updates=updates, mode='DebugMode')
 
     for epoch in range(num_epochs):
         #batches = reader.generate_dataset_parallel()

@@ -34,10 +34,6 @@ def main(files, batch_size, emb_dim_size):
         batch_size=batch_size,
         dtype="int32",
         num_dims=2)
-
-    query_input = T.ivector('query')
-    context_output = T.ivector('context')
-
     ### TESTING
     # test_q = np.zeros(reader.get_vocab_size(), dtype=np.int32)
     # test_q[5] = 1
@@ -46,8 +42,11 @@ def main(files, batch_size, emb_dim_size):
     # test_c[9] = 1
     # context_output.tag.test_value = test_c
 
+    batch = minibatcher.get_batch()
+    query_input = batch[:,0]
+    context_output = batch[:,1]
     word2vec = Word2VecNormal(batch_size,
-                              query_input=minibatcher.get_batch(),
+                              query_input=query_input,
                               context_vocab_size=reader.get_vocab_size(),
                               query_vocab_size=reader.get_vocab_size(),
                               emb_dim_size=emb_dim_size)

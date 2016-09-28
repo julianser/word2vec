@@ -5,7 +5,7 @@ import theano
 from theano import tensor as T
 import lasagne
 from lasagne.updates import nesterov_momentum
-from lasagne.objectives import binary_crossentropy
+from lasagne.objectives import categorical_crossentropy
 
 from word2vec import Word2VecNormal
 from dataset_reader import DatasetReader
@@ -52,8 +52,7 @@ def main(files, batch_size, emb_dim_size):
                               emb_dim_size=emb_dim_size)
 
     prediction = word2vec.get_output()
-    loss = binary_crossentropy(prediction,
-                               context_output)
+    loss = categorical_crossentropy(prediction, context_output)
     loss = loss.mean()
     params = word2vec.get_all_params()
 
@@ -77,8 +76,6 @@ def main(files, batch_size, emb_dim_size):
                 print 'running minibatch', batch_num
                 losses.append(train())
             print('batch {} Mean Loss {}'.format(batch_num,np.mean(losses)))
-
-    print word2vec.embed('hello')
 
 if __name__ == '__main__':
     main(['shakespeare.txt'],

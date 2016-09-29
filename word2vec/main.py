@@ -24,7 +24,7 @@ def main(files, batch_size, emb_dim_size):
         files=files,
         macrobatch_size=10000,
         num_processes=3,
-        min_frequency=3,
+        min_frequency=10,
         verbose=True)
 
     if not reader.is_prepared():
@@ -74,10 +74,10 @@ def main(files, batch_size, emb_dim_size):
     for epoch in range(num_epochs):
         #batches = reader.generate_dataset_parallel()
         batches = reader.generate_dataset_serial()
+        import pdb
+        pdb.set_trace()
         for batch_num, batch in enumerate(batches):
             minibatcher.load_dataset(batch)
-            # DOES NOT REACH HERE
-            print 'here'
             losses = []
             for minibatch_num in range(minibatcher.get_num_batches()):
                 print 'running minibatch', batch_num

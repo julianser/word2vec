@@ -28,7 +28,7 @@ def default_parse(filename, verbose=True):
     tokenized_sentences = []
     for line in open(filename):
         tokenized_sentences.append(line.lower().strip().split())
-        return tokenized_sentences
+    return tokenized_sentences
 
 
 class DatasetReader(object):

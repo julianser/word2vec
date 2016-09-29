@@ -24,7 +24,7 @@ def main(files, batch_size, emb_dim_size):
         files=files,
         macrobatch_size=10000,
         num_processes=3,
-        min_frequency=0,
+        min_frequency=3,
         verbose=True)
 
     if not reader.is_prepared():
@@ -42,9 +42,12 @@ def main(files, batch_size, emb_dim_size):
     # test_c[9] = 1
     # context_output.tag.test_value = test_c
 
-    batch = minibatcher.get_batch()
-    query_input = batch[:,0]
-    context_output = batch[:,1]
+    batch_rows = minibatcher.get_batch()
+    query_input = batch_rows[:,0]
+    context_target = batch_rows[:,1]
+    # query_input = T.ivector('query')
+    # context_target = T.ivector('context')
+
     word2vec = Word2VecNormal(batch_size,
                               query_input=query_input,
                               context_vocab_size=reader.get_vocab_size(),
@@ -52,7 +55,8 @@ def main(files, batch_size, emb_dim_size):
                               emb_dim_size=emb_dim_size)
 
     prediction = word2vec.get_output()
-    loss = categorical_crossentropy(prediction, context_output)
+    loss = categorical_crossentropy(prediction,
+                                    context_target)
     loss = loss.mean()
     params = word2vec.get_all_params()
 
@@ -62,8 +66,9 @@ def main(files, batch_size, emb_dim_size):
                                 momentum)
     updates.update(minibatcher.get_updates())
 
-    train = theano.function([],
-                            loss,
+    # train = theano.function([query_input, context_target], loss,
+                            # updates=updates, mode='DebugMode')
+    train = theano.function([], loss,
                             updates=updates, mode='DebugMode')
 
     for epoch in range(num_epochs):
@@ -71,10 +76,17 @@ def main(files, batch_size, emb_dim_size):
         batches = reader.generate_dataset_serial()
         for batch_num, batch in enumerate(batches):
             minibatcher.load_dataset(batch)
+            # DOES NOT REACH HERE
+            print 'here'
             losses = []
             for minibatch_num in range(minibatcher.get_num_batches()):
                 print 'running minibatch', batch_num
+                # batch_rows = minibatcher.get_batch()
+                # queries = batch_rows[:,0]
+                # contexts = batch_rows[:,1]
+                # losses.append(train(queries, contexts))
                 losses.append(train())
+
             print('batch {} Mean Loss {}'.format(batch_num,np.mean(losses)))
 
 if __name__ == '__main__':

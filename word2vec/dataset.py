@@ -1,0 +1,3 @@
+import fuel
+
+def

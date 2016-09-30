@@ -93,3 +93,6 @@ ENV/
 
 #Vim
 *.swp
+
+#data files
+data/

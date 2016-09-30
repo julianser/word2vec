@@ -1,4 +1,5 @@
-from abc import ABCMeta
+import numpy as np
+import os
 
 import theano
 import lasagne
@@ -12,13 +13,13 @@ class Word2VecBase:
         """
         initialize the train and embed methods
         """
-        embed_network, self.network = self.model(batch_size,
-                                        query_input,
-                                        query_vocab_size,
-                                        context_vocab_size,
-                                        emb_dim_size)
+        self.embedder, self.network = self.model(batch_size,
+                                                 query_input,
+                                                 query_vocab_size,
+                                                 context_vocab_size,
+                                                 emb_dim_size)
 
-        embedding = L.get_output(embed_network)
+        embedding = L.get_output(self.embedder)
         self.embed = theano.function([query_input], embedding)
 
     def model(self, batch_size, query_input, query_vocab_size,
@@ -30,6 +31,11 @@ class Word2VecBase:
 
     def get_all_params(self):
         return L.get_all_params(self.network, trainable=True)
+
+    def save_embedder(self, save_dir):
+        values = L.get_all_param_values(self.embedder)
+        filename = os.path.join(save_dir, 'embedder.npz')
+        np.savez(filename, values=values)
 
 
 class Word2VecNormal(Word2VecBase):

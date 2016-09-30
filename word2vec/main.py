@@ -35,9 +35,6 @@ def main(files, batch_size, emb_dim_size):
                          bos_token=None,
                          eos_token=None,
                          preprocess=dataset.preprocess)
-    data_stream = DataStream(text_data,
-                             iteration_scheme=SequentialScheme(text_data.num_examples,
-                                                               batch_size))
 
     query_input = T.ivector('query')
     context_target = T.ivector('context')

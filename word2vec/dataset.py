@@ -25,7 +25,7 @@ def make_dictionary(files, vocabulary_size=None, min_count=None):
             for line in f:
                 counter.update(preprocess(line.strip()).split())
 
-    counts = counter.most_common(vocabulary_size)
+    counts = counter.most_common(vocabulary_size - 1)
 
     if min_count:
         pass
@@ -39,6 +39,9 @@ def make_dictionary(files, vocabulary_size=None, min_count=None):
     dictionary['<UNK>'] = len(dictionary)
 
     return dictionary
+
+
+def
 
 
 if __name__ == '__main__':

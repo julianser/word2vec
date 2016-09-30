@@ -1,15 +1,22 @@
+#TODO(michael)
+# text data stream to (query, context) pairs
+
 import time
 import numpy as np
 
 import theano
 from theano import tensor as T
+
 import lasagne
 from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy
+import fuel
+from fuel.datasets.text import TextFile
+from fuel.schemes import SequentialScheme
+from fuel.streams import DataStream
 
 from word2vec import Word2VecNormal
-from dataset_reader import DatasetReader
-from minibatcher import Minibatcher
+import dataset
 
 
 theano.config.exception_verbosity = 'high'
@@ -20,38 +27,25 @@ def main(files, batch_size, emb_dim_size):
     momentum = 0.9
     num_epochs = 3
 
-    reader = DatasetReader(
-        files=files,
-        macrobatch_size=10000,
-        num_processes=3,
-        min_frequency=10,
-        verbose=True)
+    dictionary = dataset.make_dictionary(files)
+    vocab_size = len(dictionary)
+    text_data = TextFile(files,
+                         dictionary,
+                         unk_token='<UNK>',
+                         bos_token=None,
+                         eos_token=None,
+                         preprocess=dataset.preprocess)
+    data_stream = DataStream(text_data,
+                             iteration_scheme=SequentialScheme(text_data.num_examples,
+                                                               batch_size))
 
-    if not reader.is_prepared():
-        reader.prepare()
-
-    minibatcher = Minibatcher(
-        batch_size=batch_size,
-        dtype="int32",
-        num_dims=2)
-    ### TESTING
-    # test_q = np.zeros(reader.get_vocab_size(), dtype=np.int32)
-    # test_q[5] = 1
-    # query_input.tag.test_value = test_q
-    # test_c = np.zeros(reader.get_vocab_size(), dtype=np.int32)
-    # test_c[9] = 1
-    # context_output.tag.test_value = test_c
-
-    batch_rows = minibatcher.get_batch()
-    query_input = batch_rows[:,0]
-    context_target = batch_rows[:,1]
-    # query_input = T.ivector('query')
-    # context_target = T.ivector('context')
+    query_input = T.ivector('query')
+    context_target = T.ivector('context')
 
     word2vec = Word2VecNormal(batch_size,
                               query_input=query_input,
-                              context_vocab_size=reader.get_vocab_size(),
-                              query_vocab_size=reader.get_vocab_size(),
+                              context_vocab_size=vocab_size,
+                              query_vocab_size=vocab_size,
                               emb_dim_size=emb_dim_size)
 
     prediction = word2vec.get_output()
@@ -59,35 +53,30 @@ def main(files, batch_size, emb_dim_size):
                                     context_target)
     loss = loss.mean()
     params = word2vec.get_all_params()
+    updates = nesterov_momentum(loss, params, learning_rate, momentum)
 
-    updates = nesterov_momentum(loss,
-                                params,
-                                learning_rate,
-                                momentum)
-    updates.update(minibatcher.get_updates())
-
-    # train = theano.function([query_input, context_target], loss,
-                            # updates=updates, mode='DebugMode')
-    train = theano.function([], loss,
+    train = theano.function([query_input, context_target], loss,
                             updates=updates, mode='DebugMode')
 
-    for epoch in range(num_epochs):
+
+    for data in data_stream.get_epoch_iterator():
+        print data
         #batches = reader.generate_dataset_parallel()
-        batches = reader.generate_dataset_serial()
-        import pdb
-        pdb.set_trace()
-        for batch_num, batch in enumerate(batches):
-            minibatcher.load_dataset(batch)
-            losses = []
-            for minibatch_num in range(minibatcher.get_num_batches()):
-                print 'running minibatch', batch_num
+        # batches = reader.generate_dataset_serial()
+        # import pdb
+        # pdb.set_trace()
+        # for batch_num, batch in enumerate(batches):
+            # minibatcher.load_dataset(batch)
+            # losses = []
+            # for minibatch_num in range(minibatcher.get_num_batches()):
+                # print 'running minibatch', batch_num
                 # batch_rows = minibatcher.get_batch()
                 # queries = batch_rows[:,0]
                 # contexts = batch_rows[:,1]
                 # losses.append(train(queries, contexts))
-                losses.append(train())
+                # losses.append(train())
 
-            print('batch {} Mean Loss {}'.format(batch_num,np.mean(losses)))
+            # print('batch {} Mean Loss {}'.format(batch_num,np.mean(losses)))
 
 if __name__ == '__main__':
     main(['shakespeare.txt'],

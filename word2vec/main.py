@@ -97,6 +97,9 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
 
     print 'Number of epochs: ', num_epochs
 
+    batch_rows = minibatcher.get_batch()
+    train = theano.function([], batch_rows, updates=minibatcher.get_updates())
+
     for epoch in range(num_epochs):
         print 'epoch number: ', epoch
         macrobatches = reader.generate_dataset_serial()
@@ -108,8 +111,8 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
             minibatcher.load_dataset(batch)
             for minibatch_num in range(minibatcher.get_num_batches()):
                 print 'running minibatch', minibatch_num
-                batch_rows = minibatcher.get_batch()
-                #print 'query: {} '.format(batch_rows)
+                query = train()
+                print 'query: {} '.format(query)
 
 
 if __name__ == '__main__':

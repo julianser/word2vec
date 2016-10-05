@@ -109,7 +109,7 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
             for minibatch_num in range(minibatcher.get_num_batches()):
                 print 'running minibatch', minibatch_num
                 batch_rows = minibatcher.get_batch()
-                print 'query {} '.format(batch_rows)
+                print 'query: {} '.format(batch_rows)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ from word2vec import Word2VecNormal
 from dataset_reader import DatasetReader
 from minibatcher import Minibatcher
 
-# theano.config.compute_test_value = 'warn'
+theano.config.compute_test_value = 'warn'
 
 def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_epochs=3, save_dir=None):
     reader = DatasetReader(
@@ -109,7 +109,7 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
             for minibatch_num in range(minibatcher.get_num_batches()):
                 print 'running minibatch', minibatch_num
                 batch_rows = minibatcher.get_batch()
-                print 'query: {} '.format(batch_rows)
+                #print 'query: {} '.format(batch_rows)
 
 
 if __name__ == '__main__':

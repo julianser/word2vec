@@ -217,7 +217,6 @@ class DatasetReader(object):
                     context_token_id = token_ids[context_token_pos]
                     examples = [[query_token_id, context_token_id]]
                     num_examples += 1
-
                     yield examples
 
     def generate_macrobatches(self, filename_iterator):
@@ -228,7 +227,10 @@ class DatasetReader(object):
 
         mcbatch_size = self.macrobatch_size
         example = []
-
+        if self.verbose:
+            print 'Generating macrobactches...'
+            print 'Vocabulary Size: ', self.unigram_dictionary.get_vocab_size()
+            
         examples = self.generate_examples(filename_iterator)
         for example_chunk in examples:
 
@@ -246,6 +248,7 @@ class DatasetReader(object):
                     yield macrobatch
 
                 example = example[mcbatch_size:]
+
 
 
         # After all files were processed, pad any remaining examples

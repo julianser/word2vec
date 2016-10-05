@@ -73,11 +73,10 @@ def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_
     # if save_dir:
         # word2vec.save_embedder(save_dir)
 
-def test(files, batch_size, num_epochs=3, save_dir=None):
-    print 'Training file directory: ', files
-    files = ['/Users/NikBel/MILA/Project/word2vec/Data/shakespeare.txt','/Users/NikBel/MILA/Project/word2vec/Data/shakespeare-2.txt' ]
+def test(dir, batch_size, num_epochs=3, save_dir=None):
+    print 'Training file directory: ', dir
     reader = DatasetReader(
-        files=files,
+        directories=dir,
         macrobatch_size=100000,
         num_processes=3,
         min_frequency=0,
@@ -95,6 +94,7 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
         batch_size=batch_size,
         dtype="int32",
         num_dims=2)
+    
     print 'Minibatcher built !'
 
     print 'Number of epochs: ', num_epochs
@@ -121,6 +121,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Word2Vec')
     parser.add_argument('mode', choices=['train', 'test'])
     parser.add_argument('--file', help='file to train off of')
+    parser.add_argument('--dir', help='directory to train off of')
     parser.add_argument('--batch_size', type=int, default=10, help='size of each training batch')
     parser.add_argument('--embed_size', type=int, default=100, help='size of the embedding dimension')
     parser.add_argument('--save_dir', help='directory where dictionary + embedder are saved to/loaded from')
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     if args.mode == 'train':
         train([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
     elif args.mode == 'test':
-        test([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
+        test([args.dir], args.batch_size, args.embed_size, save_dir=args.save_dir)
     else:
         raise Exception('Must specify either train or test')
 

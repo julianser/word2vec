@@ -290,6 +290,7 @@ class DatasetReader(object):
         file_iterator = self.generate_filenames()
         macrobatches = self.generate_macrobatches(file_iterator)
         for examples in macrobatches:
+            print 'Examples: ', examples
             yield examples
 
     def generate_dataset_worker(self, file_iterator, macrobatch_queue):

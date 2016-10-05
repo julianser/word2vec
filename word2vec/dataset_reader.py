@@ -461,7 +461,7 @@ class DatasetReader(object):
         if save_dir is not None:
             self.check_access(save_dir)
 
-        self.preparation(save_dir, *args, **kwargs)
+        self.preparation()
 
         # Save the dictionary, if requested to do so.
         if save_dir is not None:

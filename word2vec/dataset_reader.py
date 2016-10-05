@@ -240,16 +240,14 @@ class DatasetReader(object):
             while len(example) > mcbatch_size:
                 if self.verbose:
                     print 'numpyifying'
-                    macrobatch = numpyify(
+                macrobatch = numpyify(
                         example[:mcbatch_size])
 
                 if self.verbose:
                     print 'no-padding:', len(macrobatch)
-                    yield macrobatch
+                yield macrobatch
 
                 example = example[mcbatch_size:]
-
-
 
         # After all files were processed, pad any remaining examples
         # to make up a final macrobatch
@@ -265,7 +263,7 @@ class DatasetReader(object):
 
             if self.verbose:
                 print 'padded to length:', len(macrobatch)
-                yield macrobatch
+            yield macrobatch
 
     def get_padding_row(self):
         """Gets a padding row"""

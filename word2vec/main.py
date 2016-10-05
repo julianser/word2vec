@@ -78,7 +78,7 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
     files = ['/Users/NikBel/MILA/Project/word2vec/Data/shakespeare.txt','/Users/NikBel/MILA/Project/word2vec/Data/shakespeare-2.txt' ]
     reader = DatasetReader(
         files=files,
-        macrobatch_size=100,
+        macrobatch_size=100000,
         num_processes=3,
         min_frequency=0,
         kernel=[1,2,3,4,5,6,7,8,9,10,10,9,8,7,6,5,4,3,2,1],
@@ -99,8 +99,7 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
 
     print 'Number of epochs: ', num_epochs
 
-    batch_rows = minibatcher.get_batch()
-    train = theano.function([], batch_rows, updates=minibatcher.get_updates())
+    test_train = theano.function([], minibatcher.get_batch(), updates=minibatcher.get_updates())
 
     for epoch in range(num_epochs):
         print 'epoch number: ', epoch
@@ -113,7 +112,7 @@ def test(files, batch_size, num_epochs=3, save_dir=None):
             minibatcher.load_dataset(batch)
             for minibatch_num in range(minibatcher.get_num_batches()):
                 #print 'running minibatch', minibatch_num
-                query = train()
+                query = test_train()
                 print 'query: {} '.format(query)
 
 

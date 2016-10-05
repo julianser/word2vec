@@ -191,7 +191,7 @@ class DatasetReader(object):
         # sorted_examples = []
 
         for filename in filename_iterator:
-
+            print 'Parsing: ', filename
             # Parse the file, then generate a bunch of examples from it
             parsed = self.parse(filename)
 
@@ -254,7 +254,7 @@ class DatasetReader(object):
         # to make up a final macrobatch
         if len(example) > 0:
             examples_remaining = mcbatch_size - len(example)
-
+            print 'Examples remaining: ', examples_remaining
             if self.verbose:
                 print 'padding and numpyifying'
 
@@ -289,8 +289,10 @@ class DatasetReader(object):
         # Generate the data for each file
         file_iterator = self.generate_filenames()
         macrobatches = self.generate_macrobatches(file_iterator)
+        example_count = 0
         for examples in macrobatches:
-            print 'Examples: ', examples
+            example_count += 1
+            print 'Example count: ', example_count
             yield examples
 
     def generate_dataset_worker(self, file_iterator, macrobatch_queue):

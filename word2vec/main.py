@@ -94,7 +94,7 @@ def test(dir, batch_size, num_epochs=3, save_dir=None):
         batch_size=batch_size,
         dtype="int32",
         num_dims=2)
-    
+
     print 'Minibatcher built !'
 
     print 'Number of epochs: ', num_epochs
@@ -105,7 +105,6 @@ def test(dir, batch_size, num_epochs=3, save_dir=None):
         print 'epoch number: ', epoch
         macrobatches = reader.generate_dataset_serial()
         macrobatch_num = 0
-        print macrobatches
         for batch in macrobatches:
             macrobatch_num += 1
             print 'running macrobatch {}'.format(macrobatch_num)

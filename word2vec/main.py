@@ -22,9 +22,7 @@ def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_
         verbose=False)
 
     if not reader.is_prepared():
-        reader.prepare()
-        if save_dir:
-            reader.save_dictionary(save_dir)
+        reader.prepare(save_dir=save_dir)
 
     minibatcher = Minibatcher(
         batch_size=batch_size,
@@ -53,7 +51,7 @@ def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_
                                 # momentum)
     # updates.update(minibatcher.get_updates())
 
-    train = theano.function([], query_input, updates=minibatcher.get_updates())
+    #train = theano.function([], query_input, updates=minibatcher.get_updates())
     # train = theano.function([], loss,
                             # updates=updates, mode='DebugMode')
 
@@ -75,6 +73,32 @@ def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_
     # if save_dir:
         # word2vec.save_embedder(save_dir)
 
+def test(files, batch_size, num_epochs=3, save_dir=None):
+    reader = DatasetReader(
+        files=files,
+        macrobatch_size=10000,
+        num_processes=3,
+        min_frequency=10,
+        verbose=False)
+
+    if not reader.is_prepared():
+        reader.prepare(save_dir=save_dir)
+
+    minibatcher = Minibatcher(
+        batch_size=batch_size,
+        dtype="int32",
+        num_dims=2)
+
+    for epoch in range(num_epochs):
+        batches = reader.generate_dataset_serial()
+        for batch_num, batch in enumerate(batches):
+            print 'running batch {}'.format(batch_num)
+            minibatcher.load_dataset(batch)
+            for minibatch_num in range(minibatcher.get_num_batches()):
+                print 'running minibatch', batch_num
+                query = train()
+                print 'query {}   context {}'.format(query, None)
+
 
 if __name__ == '__main__':
     import argparse
@@ -92,7 +116,13 @@ if __name__ == '__main__':
     elif args.mode == 'test' and not args.save_dir:
         raise Exception('Must specify directory to load dictionary + embedder from for testing')
 
-    train([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
+    if args.mode == 'train':
+        train([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
+    elif args.mode == 'test':
+        test([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
+    else:
+        raise Exception('Must specify either train or test')
+
 
 
 

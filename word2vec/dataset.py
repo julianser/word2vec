@@ -1,9 +1,13 @@
-#TODO(michael): change preprocess to keep only alpha or alphanumerics
+#TODO(michael):
+# change preprocess to keep only alpha or alphanumerics
+# add subsampling
+# add negative sampling
 
 import string
 from collections import Counter
 
 import fuel
+from fuel.transformers import Transformer
 
 
 table = string.maketrans("","")
@@ -41,11 +45,39 @@ def make_dictionary(files, vocabulary_size=None, min_count=None):
     return dictionary
 
 
-def
+class SkipGram(Transformer):
+    def __init__(self, skip_windows, num_skips, data_stream, target_source='targets',
+                 **kwargs):
+        if not data_stream.produces_examples:
+            raise ValueError('the wrapped data stream must produce examples, '
+                             'not batches of examples.')
+        if len(data_stream.sources) > 1:
+            raise ValueError('{} expects only one source'
+                             .format(self.__class__.__name__))
 
+        super(SkipGram, self).__init__(data_stream, produces_examples=True, **kwargs)
+        self.sources = self.sources + (target_source,)
 
-if __name__ == '__main__':
-    from pprint import pprint
-    pprint(make_dictionary('shakespeare.txt'))
+        self.skip_window = skip_window
+        self.num_skips = num_skips
+
+        self.source_word_index = 0
+        self.skip_counter = 0
+        self.sentence = []
+
+    def get_data(self, request=None):
+        if request is not None:
+            raise ValueError
+
+        if self.skip_counter > self.num_skips:
+            self.source_word_index += 1
+            self.skip_counter = 0
+
+            if self.source_word_index >= len(sentence):
+                while len(self.sentence) <= 1:
+                    self.sentence, = next(self.child_epoch_iterator)
+
+        self.skip_counter += 1
+        return (source, target)
 
 

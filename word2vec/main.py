@@ -12,8 +12,6 @@ from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy
 import fuel
 from fuel.datasets.text import TextFile
-from fuel.schemes import SequentialScheme
-from fuel.streams import DataStream
 
 from word2vec import Word2VecNormal
 import dataset

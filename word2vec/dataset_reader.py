@@ -227,6 +227,7 @@ class DatasetReader(object):
 
         mcbatch_size = self.macrobatch_size
         example = []
+
         if self.verbose:
             print 'Generating macrobactches...'
             print 'Vocabulary Size: ', self.unigram_dictionary.get_vocab_size()
@@ -421,7 +422,7 @@ class DatasetReader(object):
             save_dir, 'dictionary'
         ))
 
-    def preparation(self, save_dir, min_frequency=None):
+    def preparation(self):
         """Prepares the DataSet Reader"""
         # Read through the corpus, building the UnigramDictionary
         for filename in self.generate_filenames():

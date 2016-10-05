@@ -18,7 +18,7 @@ def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_
         files=files,
         macrobatch_size=10000,
         num_processes=3,
-        min_frequency=10,
+        min_frequency=0,
         verbose=False)
 
     if not reader.is_prepared():
@@ -74,30 +74,42 @@ def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_
         # word2vec.save_embedder(save_dir)
 
 def test(files, batch_size, num_epochs=3, save_dir=None):
+    print 'Training file directory: ', files
     reader = DatasetReader(
         files=files,
         macrobatch_size=10000,
         num_processes=3,
-        min_frequency=10,
-        verbose=False)
+        min_frequency=0,
+        verbose=True)
+
+    print 'Reader build !'
 
     if not reader.is_prepared():
         reader.prepare(save_dir=save_dir)
+
+    print 'Reader prepared !'
 
     minibatcher = Minibatcher(
         batch_size=batch_size,
         dtype="int32",
         num_dims=2)
+    print 'Minibatcher built !'
+
+    print 'Number of epochs: ', num_epochs
 
     for epoch in range(num_epochs):
-        batches = reader.generate_dataset_serial()
-        for batch_num, batch in enumerate(batches):
-            print 'running batch {}'.format(batch_num)
+        print 'epoch number: ', epoch
+        macrobatches = reader.generate_dataset_serial()
+        macrobatch_num = 0
+        print macrobatches
+        for batch in macrobatches:
+            macrobatch_num += 1
+            print 'running macrobatch {}'.format(macrobatch_num)
             minibatcher.load_dataset(batch)
             for minibatch_num in range(minibatcher.get_num_batches()):
-                print 'running minibatch', batch_num
-                query = train()
-                print 'query {}   context {}'.format(query, None)
+                print 'running minibatch', minibatch_num
+                batch_rows = minibatcher.get_batch()
+                print 'query {} '.format(batch_rows)
 
 
 if __name__ == '__main__':
@@ -113,8 +125,6 @@ if __name__ == '__main__':
 
     if args.mode == 'train' and not args.file:
         raise Exception('Must specify training file if in train mode')
-    elif args.mode == 'test' and not args.save_dir:
-        raise Exception('Must specify directory to load dictionary + embedder from for testing')
 
     if args.mode == 'train':
         train([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)

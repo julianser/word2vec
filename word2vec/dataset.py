@@ -4,6 +4,7 @@
 # add negative sampling
 
 import string
+import random
 from collections import Counter
 
 import fuel
@@ -29,11 +30,12 @@ def make_dictionary(files, vocabulary_size=None, min_count=None):
             for line in f:
                 counter.update(preprocess(line.strip()).split())
 
-    counts = counter.most_common(vocabulary_size - 1)
+    #TODO(michael): should this be -1?
+    counts = counter.most_common(vocabulary_size)
 
     if min_count:
-        pass
         #TODO(michael)
+        pass
 
     dictionary = {}
     for index, word_count in enumerate(counts):
@@ -46,7 +48,7 @@ def make_dictionary(files, vocabulary_size=None, min_count=None):
 
 
 class SkipGram(Transformer):
-    def __init__(self, skip_windows, num_skips, data_stream, target_source='targets',
+    def __init__(self, skip_window, num_skips, data_stream, target_source='targets',
                  **kwargs):
         if not data_stream.produces_examples:
             raise ValueError('the wrapped data stream must produce examples, '
@@ -61,7 +63,8 @@ class SkipGram(Transformer):
         self.skip_window = skip_window
         self.num_skips = num_skips
 
-        self.source_word_index = 0
+        self.source_index = 0
+        self.target_indices = []
         self.skip_counter = 0
         self.sentence = []
 
@@ -69,15 +72,38 @@ class SkipGram(Transformer):
         if request is not None:
             raise ValueError
 
-        if self.skip_counter > self.num_skips:
-            self.source_word_index += 1
+        if not self.target_indices or self.skip_counter > self.num_skips:
             self.skip_counter = 0
 
-            if self.source_word_index >= len(sentence):
+            if self.source_index < len(self.sentence) - 1:
+                self.source_index += 1
+            else:
+                # choose a new sentence with length > 1
+                self.sentence = []
                 while len(self.sentence) <= 1:
                     self.sentence, = next(self.child_epoch_iterator)
 
+                self.source_index = 0
+
+            # create list of possible target indices
+            min_index = max(self.source_index - self.skip_window, 0)
+            max_index = min(self.source_index + self.skip_window + 1, len(self.sentence) - 1)
+            self.target_indices = range(min_index, self.source_index) +  \
+                range(self.source_index+1, max_index+1)
+
+            # random.shuffle(self.target_indices)
+
+        self.target_index = self.target_indices.pop()
         self.skip_counter += 1
+        source = self.sentence[self.source_index]
+        target = self.sentence[self.target_index]
         return (source, target)
+
+    def get_batches(self, batch_size):
+        epoch = self.get_epoch_iterator()
+
+
+
+
 
 

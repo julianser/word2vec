@@ -3,6 +3,7 @@ Calculates the maximum likelihood probability of single words based on the
 frequency within the corpus and enables efficiently sampling
 from the distribution.
 
+
 Assumes that the words have been converted into ids that were assigned
 by auto-incrementing from 0 (The consequence if that is not the case isn't dire,
 it just means memory would be wasted)
@@ -10,6 +11,7 @@ it just means memory would be wasted)
 
 import numpy as np
 import gzip
+import time
 
 
 class Sampler(object):

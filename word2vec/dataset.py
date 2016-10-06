@@ -1,55 +1,82 @@
-#TODO(michael):
+# TODO(michael):
 # change preprocess to keep only alpha or alphanumerics
 # add subsampling
 # add negative sampling
+# add minimum count
 
 import string
 import random
 from collections import Counter
 
 import fuel
+from fuel.datasets.text import TextFile
 from fuel.transformers import Transformer
+from fuel.streams import DataStream
+import numpy as np
 
 
-table = string.maketrans("","")
-def preprocess(s):
-    """Remove punctuation and make lowercase"""
-    return s.translate(table, string.punctuation).lower()
+table = string.maketrans("", "")
+
+class Dataset:
+    def __init__(self, files, vocabulary_size=None, min_count=None):
+        if vocabulary_size is not None:
+            dictionary_vocab = vocabulary_size - 1
+        else:
+            dictionary_vocab = None
+
+        self.dictionary = self.make_dictionary(files,
+                                               dictionary_vocab,
+                                               min_count)
+        self.vocab_size = len(self.dictionary)
+
+        text_data = TextFile(files,
+                             self.dictionary,
+                             unk_token='<UNK>',
+                             bos_token=None,
+                             eos_token=None,
+                             preprocess=self._preprocess)
+        stream = DataStream(text_data)
+        self.data_stream = SkipGram(skip_window=10,
+                                    num_skips=20,
+                                    data_stream=stream)
+
+    def _preprocess(self, s):
+        """Remove punctuation and make string lowercase"""
+        return s.translate(table, string.punctuation).lower()
 
 
-def make_dictionary(files, vocabulary_size=None, min_count=None):
-    """Make dictionary containing words and their counts
+    def make_dictionary(self, files, vocabulary_size=None, min_count=None):
+        """Make dictionary containing words and their counts
 
-    if vocabulary size is specified, return only that many of the most common
-    words
-    """
-    counter = Counter()
+        if vocabulary size is specified, return only that many of the most common
+        words
+        """
+        counter = Counter()
 
-    for filename in files:
-        with open(filename, 'r') as f:
-            for line in f:
-                counter.update(preprocess(line.strip()).split())
+        for filename in files:
+            with open(filename, 'r') as f:
+                for line in f:
+                    counter.update(self._preprocess(line.strip()).split())
 
-    #TODO(michael): should this be -1?
-    counts = counter.most_common(vocabulary_size)
+        # TODO(michael): should this be -1?
+        counts = counter.most_common(vocabulary_size)
 
-    if min_count:
-        #TODO(michael)
-        pass
+        if min_count:
+            pass
 
-    dictionary = {}
-    for index, word_count in enumerate(counts):
-        word, _ = word_count
-        dictionary[word] = index
+        dictionary = {}
+        for index, word_count in enumerate(counts):
+            word, _ = word_count
+            dictionary[word] = index
 
-    dictionary['<UNK>'] = len(dictionary)
+        dictionary['<UNK>'] = len(dictionary)
 
-    return dictionary
+        return dictionary
 
 
 class SkipGram(Transformer):
-    def __init__(self, skip_window, num_skips, data_stream, target_source='targets',
-                 **kwargs):
+    def __init__(self, skip_window, num_skips, data_stream,
+                 target_source='targets', **kwargs):
         if not data_stream.produces_examples:
             raise ValueError('the wrapped data stream must produce examples, '
                              'not batches of examples.')
@@ -57,7 +84,8 @@ class SkipGram(Transformer):
             raise ValueError('{} expects only one source'
                              .format(self.__class__.__name__))
 
-        super(SkipGram, self).__init__(data_stream, produces_examples=True, **kwargs)
+        super(SkipGram, self).__init__(data_stream, produces_examples=True,
+                                       **kwargs)
         self.sources = self.sources + (target_source,)
 
         self.skip_window = skip_window
@@ -87,7 +115,8 @@ class SkipGram(Transformer):
 
             # create list of possible target indices
             min_index = max(self.source_index - self.skip_window, 0)
-            max_index = min(self.source_index + self.skip_window + 1, len(self.sentence) - 1)
+            max_index = min(self.source_index + self.skip_window + 1,
+                            len(self.sentence) - 1)
             self.target_indices = range(min_index, self.source_index) +  \
                 range(self.source_index+1, max_index+1)
 
@@ -100,10 +129,18 @@ class SkipGram(Transformer):
         return (source, target)
 
     def get_batches(self, batch_size):
-        epoch = self.get_epoch_iterator()
+        data = self.get_epoch_iterator()
+        while True:
+            batch_source = []
+            batch_target = []
+            try:
+                for i in range(batch_size):
+                    source, target = next(data)
+                    batch_source.append(source)
+                    batch_target.append(target)
+            except StopIteration:
+                break
 
-
-
-
-
+            yield (np.array(batch_source, dtype=np.int32),
+                   np.array(batch_target, dtype=np.int32))
 

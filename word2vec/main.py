@@ -59,7 +59,6 @@ def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_
         #batches = reader.generate_dataset_parallel()
         batches = reader.generate_dataset_serial()
         for batch_num, batch in enumerate(batches):
-            print 'Hello'
             print 'running batch {}'.format(batch_num)
             minibatcher.load_dataset(batch)
             losses = []

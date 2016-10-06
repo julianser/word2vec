@@ -94,5 +94,5 @@ ENV/
 #Vim
 *.swp
 
-#data files
-data/
+# save files
+save/

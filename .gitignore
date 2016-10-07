@@ -93,6 +93,7 @@ ENV/
 
 #Vim
 *.swp
+*.orig
 
 # save files
 save/

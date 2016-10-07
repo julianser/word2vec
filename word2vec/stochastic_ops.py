@@ -1,4 +1,5 @@
 import theano
+from theano.sandbox.rng_mrg import MRG_RandomStreams
 import theano.tensor as tensor
 import numpy as np
 import hyperparameters
@@ -10,7 +11,7 @@ class Stochastic_Op(theano.Op):
 
     def __init__(self, estimator):
         super(Stochastic_Op, self).__init__()
-        self.rng = theano.sandbox.rng_mrg.MRG_RandomStreams(hyperparameters.RANDOM_SEED)
+        self.rng = MRG_RandomStreams(hyperparameters.RANDOM_SEED)
         self.estimator = estimator
 
     def make_node(self, x):

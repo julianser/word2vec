@@ -23,7 +23,7 @@ class Stochastic_Op(theano.Op):
         return theano.Apply(self,[x,],[x.type()])
 
 
-    def perform(self, node, input_storage, output_storage):
+    def perform(self, node, input_storage, output_storage, params=None):
         x, = input_storage
         y = self.rng.multinomial(n=1,pvals=x)
         output_storage[0][0] = y
@@ -62,11 +62,14 @@ class ST_grad_estimator(theano.Op):
         if dy.ndim == 1:
             dy = tensor.shape_padleft(dy, n_ones=1)
         return theano.Apply(self, [dy], [dy.type()])
-    def perform(self, node, input_storage, output_storage):
+
+    def perform(self, node, input_storage, output_storage, params=None):
         dy, = input_storage
         output_storage[0][0] = dy
+
     def grad(self):
         raise NotImplementedError('Estimators have no gradient.')
+
     def infer_shape(self, node, shape):
         return shape
 

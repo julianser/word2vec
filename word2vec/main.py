@@ -8,6 +8,7 @@ import theano
 from theano import tensor as T
 
 from word2vec import Word2VecNormal
+from word2vec import Word2VecDiscrete
 from dataset import Dataset
 
 
@@ -23,10 +24,10 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir):
 
     query_input = T.ivector('query')
     context_target = T.ivector('context')
-    word2vec = Word2VecNormal(batch_size=batch_size,
-                              context_vocab_size=dataset.vocab_size,
-                              query_vocab_size=dataset.vocab_size,
-                              emb_dim_size=emb_dim_size)
+    word2vec = Word2VecDiscrete(batch_size=batch_size,
+                                context_vocab_size=dataset.vocab_size,
+                                query_vocab_size=dataset.vocab_size,
+                                emb_dim_size=emb_dim_size)
     word2vec.build_model(query_input)
 
     prediction = word2vec.get_output()

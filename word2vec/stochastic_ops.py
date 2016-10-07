@@ -4,24 +4,16 @@ import numpy as np
 import hyperparameters
 
 class Stochastic_Op(theano.Op):
-    """
-    Softmax activation function
-    :math:`\\varphi(\\mathbf{x})_j =
-    \\frac{e^{\mathbf{x}_j}}{\sum_{k=1}^K e^{\mathbf{x}_k}}`
-    where :math:`K` is the total number of neurons in the layer. This
-    activation function gets applied row-wise.
-
-    """
-
     nin = 1
     nout = 1
     __props__ = ()
-    def __init__(self,estimator):
-        super(self,Stochastic_Op).__init__()
+
+    def __init__(self, estimator):
+        super(Stochastic_Op, self).__init__()
         self.rng = theano.sandbox.rng_mrg.MRG_RandomStreams(hyperparameters.RANDOM_SEED)
         self.estimator = estimator
 
-    def make_node(self,x):
+    def make_node(self, x):
         x = tensor.as_tensor_variable(x)
         if x.type.ndim not in (1, 2) \
               or x.type.dtype not in tensor.float_dtypes:

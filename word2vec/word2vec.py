@@ -5,7 +5,7 @@ import theano
 import lasagne
 from lasagne import layers as L
 
-from stochastic_layer import StochasticLayer
+# from stochastic_layer import StochasticLayer
 
 
 class Word2VecBase:
@@ -85,24 +85,24 @@ class Word2VecNormal(Word2VecBase):
         return l_embed, l_out
 
 
-class Word2VecDiscreteContinuous(Word2VecBase):
-    def model(self, query_input, batch_size, query_vocab_size,
-              context_vocab_size, emb_dim_size):
-        l_input = L.InputLayer(shape=(batch_size,),
-                               input_var=query_input)
-        l_embed_continuous = L.EmbeddingLayer(l_input,
-                                              input_size=query_vocab_size,
-                                              output_size=emb_dim_size)
-        l_values_discrete = L.EmbeddingLayer(l_input,
-                                             input_size=query_vocab_size,
-                                             output_size=emb_dim_size)
-        l_probabilities_discrete = L.NonlinearityLayer(
-            l_values_discrete,
-            nonlinearity=lasagne.nonlinearities.softmax)
-        l_embed_discrete = StochasticLayer(l_probabilities_discrete)
-        l_merge = L.ElemwiseSumLayer([l_embed_continuous, l_emebed_discrete])
-        l_out = L.DenseLayer(l_embed,
-                             num_units=context_vocab_size,
-                             nonlinearity=lasagne.nonlinearities.softmax)
+# class Word2VecDiscreteContinuous(Word2VecBase):
+    # def model(self, query_input, batch_size, query_vocab_size,
+              # context_vocab_size, emb_dim_size):
+        # l_input = L.InputLayer(shape=(batch_size,),
+                               # input_var=query_input)
+        # l_embed_continuous = L.EmbeddingLayer(l_input,
+                                              # input_size=query_vocab_size,
+                                              # output_size=emb_dim_size)
+        # l_values_discrete = L.EmbeddingLayer(l_input,
+                                             # input_size=query_vocab_size,
+                                             # output_size=emb_dim_size)
+        # l_probabilities_discrete = L.NonlinearityLayer(
+            # l_values_discrete,
+            # nonlinearity=lasagne.nonlinearities.softmax)
+        # l_embed_discrete = StochasticLayer(l_probabilities_discrete)
+        # l_merge = L.ElemwiseSumLayer([l_embed_continuous, l_emebed_discrete])
+        # l_out = L.DenseLayer(l_merge,
+                             # num_units=context_vocab_size,
+                             # nonlinearity=lasagne.nonlinearities.softmax)
 
-        return l_merge, l_out
+        # return l_merge, l_out

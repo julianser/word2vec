@@ -66,9 +66,6 @@ class Dataset:
         # TODO(michael): should this be -1?
         counts = counter.most_common(vocabulary_size)
 
-        print 'counting'
-        print sum(word_count[1] for word_count in counts)
-
         if min_count:
             pass
 

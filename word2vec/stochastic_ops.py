@@ -18,7 +18,7 @@ class Stochastic_Op(theano.Op):
     __props__ = ()
     def __init__(self,estimator):
         super(self,Stochastic_Op).__init__()
-        self.rng = theano.sandbox.rng_mrg.MRG_RandomStreams(hyperparameters.RAMDOM_SEED)
+        self.rng = theano.sandbox.rng_mrg.MRG_RandomStreams(hyperparameters.RANDOM_SEED)
         self.estimator = estimator
 
     def make_node(self,x):
@@ -28,7 +28,7 @@ class Stochastic_Op(theano.Op):
             raise ValueError('x must be 1-d or 2-d tensor of floats. Got %s' %
                              x.type)
         return theano.Apply(self,[x,],[x.type()])
-    
+
 
     def perform(self, node, input_storage, output_storage):
         x, = input_storage
@@ -76,5 +76,5 @@ class ST_grad_estimator(theano.Op):
         raise NotImplementedError('Estimators have no gradient.')
     def infer_shape(self, node, shape):
         return shape
-      
+
 ST_estimator = ST_grad_estimator()

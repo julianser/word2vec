@@ -46,7 +46,7 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir):
         if i % 100 == 0:
             print('batch {} mean loss {}'.format(i ,np.mean(losses)))
 
-        if i % 10000 == 0:
+        if save_dir and i % 10000 == 0:
             word2vec.save(save_dir)
 
     if save_dir:

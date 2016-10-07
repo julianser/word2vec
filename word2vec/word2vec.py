@@ -1,24 +1,30 @@
+import os
+from six.moves import cPickle
+
 import theano
 import lasagne
 from lasagne import layers as L
 
 
 class Word2VecBase:
-    def __init__(self, batch_size, query_input, query_vocab_size,
-                 context_vocab_size, emb_dim_size):
-        """
-        initialize the train and embed methods
-        """
-        embed_network, self.network = self.model(batch_size,
-                                        query_input,
-                                        query_vocab_size,
-                                        context_vocab_size,
-                                        emb_dim_size)
+    def __init__(self, batch_size, query_vocab_size, context_vocab_size,
+                 emb_dim_size):
+        self.batch_size = batch_size
+        self.query_vocab_size = query_vocab_size
+        self.context_vocab_size = context_vocab_size
+        self.emb_dim_size = emb_dim_size
 
-        embedding = L.get_output(embed_network)
-        self.embed = theano.function([query_input], embedding)
+    def build_model(self, query_input):
+        self.embed_network, self.network = self.model(query_input,
+                                                      self.batch_size,
+                                                      self.query_vocab_size,
+                                                      self.context_vocab_size,
+                                                      self.emb_dim_size)
 
-    def model(self, batch_size, query_input, query_vocab_size,
+        self.embed = theano.function([query_input],
+                                     L.get_output(self.embed_network))
+
+    def model(self, query_input, batch_size, query_vocab_size,
               context_vocab_size, emb_dim_size):
         raise NotImplementedError
 
@@ -28,9 +34,42 @@ class Word2VecBase:
     def get_all_params(self):
         return L.get_all_params(self.network, trainable=True)
 
+    def save(self, save_dir):
+        params = [self.batch_size,
+                  self.query_vocab_size,
+                  self.context_vocab_size,
+                  self.emb_dim_size]
+        values = L.get_all_param_values(self.embed_network)
+
+        filename = os.path.join(save_dir, 'network_params.save')
+        with open(filename, 'wb') as f:
+            cPickle.dump(params, f, protocol=cPickle.HIGHEST_PROTOCOL)
+
+        filename = os.path.join(save_dir, 'embedder_values.save')
+        with open(filename, 'wb') as f:
+            cPickle.dump(values, f, protocol=cPickle.HIGHEST_PROTOCOL)
+
+    def load_params(self, save_dir):
+        filename = os.path.join(save_dir, 'network_params.save')
+        with open(filename, 'wb') as f:
+            params = cPickle.load(f)
+            (self.batch_size,
+             self.query_vocab_size,
+             self.context_vocab_size,
+             self.emb_dim_size) = params
+
+    def load_embedder(self, save_dir):
+        if not self.embed_network:
+            raise Exception('Must build model before loading embedding values')
+
+        filename = os.path.join(save_dir, 'embedder_values.save')
+        with open(filename, 'wb') as f:
+            values = cPickle.dump(f)
+            L.set_all_param_values(self.embed_network, values)
+
 
 class Word2VecNormal(Word2VecBase):
-    def model(self, batch_size, query_input, query_vocab_size,
+    def model(self, query_input, batch_size, query_vocab_size,
               context_vocab_size, emb_dim_size):
         l_input = L.InputLayer(shape=(batch_size,),
                                input_var=query_input)
@@ -44,7 +83,7 @@ class Word2VecNormal(Word2VecBase):
 
 
 class Word2VecDiscreteContinuous(Word2VecBase):
-    def model(self, batch_size, query_input, query_vocab_size,
+    def model(self, query_input, batch_size, query_vocab_size,
               context_vocab_size, emb_dim_size):
         l_input = L.InputLayer(shape=(batch_size,),
                                input_var=query_input)

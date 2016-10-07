@@ -95,4 +95,4 @@ ENV/
 *.swp
 
 #data files
-data/
+save/

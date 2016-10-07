@@ -1,26 +1,22 @@
 #TODO(michael)
 # port over saving
-
-import time
-import numpy as np
-
-import theano
-from theano import tensor as T
-
 import lasagne
 from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy
+import numpy as np
+import theano
+from theano import tensor as T
 
 from word2vec import Word2VecNormal
 from dataset import Dataset
 
 
-def train(files, batch_size, emb_dim_size, save_dir):
+def train(files, batch_size, emb_dim_size, save_dir, load_dir):
     learning_rate = 0.1
     momentum = 0.9
     num_epochs = 3
 
-    dataset = Dataset(files)
+    dataset = Dataset(files, load_dir=load_dir)
     data_stream = dataset.data_stream
     if save_dir:
         dataset.save_dictionary(save_dir)
@@ -28,14 +24,13 @@ def train(files, batch_size, emb_dim_size, save_dir):
     query_input = T.ivector('query')
     context_target = T.ivector('context')
     word2vec = Word2VecNormal(batch_size=batch_size,
-                              query_input=query_input,
                               context_vocab_size=dataset.vocab_size,
                               query_vocab_size=dataset.vocab_size,
                               emb_dim_size=emb_dim_size)
+    word2vec.build_model(query_input)
 
     prediction = word2vec.get_output()
-    loss = categorical_crossentropy(prediction,
-                                    context_target)
+    loss = categorical_crossentropy(prediction, context_target)
     loss = loss.mean()
     params = word2vec.get_all_params()
     updates = nesterov_momentum(loss, params, learning_rate, momentum)
@@ -51,6 +46,22 @@ def train(files, batch_size, emb_dim_size, save_dir):
         if i % 100 == 0:
             print('batch {} mean loss {}'.format(i ,np.mean(losses)))
 
+    if save_dir:
+        word2vec.save(save_dir)
+
+
+def test(load_dir):
+    dictionary = np.load(os.path.join(load_dir, 'dictionary.save'))
+
+    query_input = T.ivector('query')
+    word2vec = Word2VecNormal(None, None, None, None)
+    word2vec.load_params(load_dir)
+    word2vec.build_model(query_input)
+    word2vec.load_embedder(save_dir)
+
+    import pdb
+    pdb.set_trace()
+
 
 if __name__ == '__main__':
     import argparse
@@ -60,6 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=10, help='size of each training batch')
     parser.add_argument('--embed_size', type=int, default=100, help='size of the embedding dimension')
     parser.add_argument('--save_dir', help='directory where dictionary + embedder are saved to/loaded from')
+    parser.add_argument('--load_dir', help='directory where dictionary + embedder are saved to/loaded from')
 
     args = parser.parse_args()
 
@@ -67,6 +79,7 @@ if __name__ == '__main__':
         raise Exception('Must specify training file if in train mode')
 
     if args.mode == 'train':
-        train([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
+        train([args.file], args.batch_size, args.embed_size,
+              save_dir=args.save_dir, load_dir=args.load_dir)
     elif args.mode == 'test':
-        test([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
+        test([args.file], load_dir=args.load_dir)

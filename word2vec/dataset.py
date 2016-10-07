@@ -4,9 +4,10 @@
 # add negative sampling
 # add minimum count
 
+from collections import Counter
+import os
 import string
 import random
-from collections import Counter
 
 import fuel
 from fuel.datasets.text import TextFile
@@ -18,15 +19,20 @@ import numpy as np
 table = string.maketrans("", "")
 
 class Dataset:
-    def __init__(self, files, vocabulary_size=None, min_count=None):
-        if vocabulary_size is not None:
-            dictionary_vocab = vocabulary_size - 1
+    def __init__(self, files, vocabulary_size=None, min_count=None,
+                 load_dir=None):
+        if load_dir is not None:
+            self.dictionary = self.load_dictionary(load_dir)
         else:
-            dictionary_vocab = None
+            if vocabulary_size is not None:
+                dictionary_vocab = vocabulary_size - 1
+            else:
+                dictionary_vocab = None
 
-        self.dictionary = self.make_dictionary(files,
-                                               dictionary_vocab,
-                                               min_count)
+            self.dictionary = self.make_dictionary(files,
+                                                   dictionary_vocab,
+                                                   min_count)
+
         self.vocab_size = len(self.dictionary)
 
         text_data = TextFile(files,
@@ -43,7 +49,6 @@ class Dataset:
     def _preprocess(self, s):
         """Remove punctuation and make string lowercase"""
         return s.translate(table, string.punctuation).lower()
-
 
     def make_dictionary(self, files, vocabulary_size=None, min_count=None):
         """Make dictionary containing words and their counts
@@ -72,6 +77,12 @@ class Dataset:
         dictionary['<UNK>'] = len(dictionary)
 
         return dictionary
+
+    def save_dictionary(self, save_dir):
+        np.save(os.path.join(save_dir, 'dictionary.npy'), self.dictionary)
+
+    def load_dictionary(self, load_dir):
+        return np.load(os.path.join(load_dir, 'dictionary.npy')).item()
 
 
 class SkipGram(Transformer):
@@ -141,6 +152,4 @@ class SkipGram(Transformer):
             except StopIteration:
                 break
 
-            yield (np.array(batch_source, dtype=np.int32),
-                   np.array(batch_target, dtype=np.int32))
-
+            yield (batch_source, batch_target)

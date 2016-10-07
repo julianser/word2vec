@@ -66,6 +66,9 @@ class Dataset:
         # TODO(michael): should this be -1?
         counts = counter.most_common(vocabulary_size)
 
+        print 'counting'
+        print sum(word_count[1] for word_count in counts)
+
         if min_count:
             pass
 
@@ -131,8 +134,7 @@ class SkipGram(Transformer):
             self.target_indices = range(min_index, self.source_index) +  \
                 range(self.source_index+1, max_index+1)
 
-            # random.shuffle(self.target_indices)
-
+        # TODO(michael) change to random sampling?
         self.target_index = self.target_indices.pop()
         self.skip_counter += 1
         source = self.sentence[self.source_index]

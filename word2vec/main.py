@@ -1,5 +1,5 @@
-#TODO(michael)
-# port over saving
+import os
+
 import lasagne
 from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy
@@ -46,12 +46,18 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir):
         if i % 100 == 0:
             print('batch {} mean loss {}'.format(i ,np.mean(losses)))
 
+        if i % 10000 == 0:
+            word2vec.save(save_dir)
+
     if save_dir:
         word2vec.save(save_dir)
 
+    import pdb
+    pdb.set_trace()
+
 
 def test(load_dir):
-    dictionary = np.load(os.path.join(load_dir, 'dictionary.save'))
+    dictionary = np.load(os.path.join(load_dir, 'dictionary.npy'))
 
     query_input = T.ivector('query')
     word2vec = Word2VecNormal(None, None, None, None)
@@ -82,4 +88,4 @@ if __name__ == '__main__':
         train([args.file], args.batch_size, args.embed_size,
               save_dir=args.save_dir, load_dir=args.load_dir)
     elif args.mode == 'test':
-        test([args.file], load_dir=args.load_dir)
+        test(args.load_dir)

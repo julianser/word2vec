@@ -67,7 +67,7 @@ class Word2VecBase:
 
         filename = os.path.join(save_dir, 'embedder_values.save')
         with open(filename, 'rb') as f:
-            values = cPickle.dump(f)
+            values = cPickle.load(f)
             L.set_all_param_values(self.embed_network, values)
 
 

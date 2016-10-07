@@ -47,9 +47,6 @@ class Stochastic_Op(theano.Op):
     def c_code(self, node, name, inp, out, sub):
         raise NotImplementedError('C code not implemented')
 
-    @staticmethod
-    def c_code_cache_version(self):
-        raise NotImplementedError('C code not implemented')
 
 Stochastic_Op = Stochastic_Op(estimator=hyperparameters.ESTIMATOR)
 

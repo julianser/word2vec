@@ -1,117 +1,72 @@
-import time
-import numpy as np
+import os
 
-import theano
-from theano import tensor as T
 import lasagne
 from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy
+import numpy as np
+import theano
+from theano import tensor as T
 
 from word2vec import Word2VecNormal
-from dataset_reader import DatasetReader
-from minibatcher import Minibatcher
+from dataset import Dataset
 
-theano.config.compute_test_value = 'warn'
 
-def train(files, batch_size, emb_dim_size, learning_rate=0.1, momentum=0.9, num_epochs=3, save_dir=None):
-    reader = DatasetReader(
-        files=files,
-        macrobatch_size=10000,
-        num_processes=3,
-        min_frequency=0,
-        verbose=False)
+def train(files, batch_size, emb_dim_size, save_dir, load_dir):
+    learning_rate = 0.1
+    momentum = 0.9
+    num_epochs = 3
 
-    if not reader.is_prepared():
-        reader.prepare(save_dir=save_dir)
+    dataset = Dataset(files, load_dir=load_dir)
+    data_stream = dataset.data_stream
+    if save_dir:
+        dataset.save_dictionary(save_dir)
 
-    minibatcher = Minibatcher(
-        batch_size=batch_size,
-        dtype="int32",
-        num_dims=2)
+    query_input = T.ivector('query')
+    context_target = T.ivector('context')
+    word2vec = Word2VecNormal(batch_size=batch_size,
+                              context_vocab_size=dataset.vocab_size,
+                              query_vocab_size=dataset.vocab_size,
+                              emb_dim_size=emb_dim_size)
+    word2vec.build_model(query_input)
 
-    batch_rows = minibatcher.get_batch()
-    query_input = batch_rows[:,0]
-    context_target = batch_rows[:,1]
+    prediction = word2vec.get_output()
+    loss = categorical_crossentropy(prediction, context_target)
+    loss = loss.mean()
+    params = word2vec.get_all_params()
+    updates = nesterov_momentum(loss, params, learning_rate, momentum)
 
-    # word2vec = Word2VecNormal(batch_size,
-                              # query_input=query_input,
-                              # context_vocab_size=reader.get_vocab_size(),
-                              # query_vocab_size=reader.get_vocab_size(),
-                              # emb_dim_size=emb_dim_size)
+    train = theano.function([query_input, context_target], loss,
+                            updates=updates)
 
-    # prediction = word2vec.get_output()
-    # loss = categorical_crossentropy(prediction,
-                                    # context_target)
-    # loss = loss.mean()
-    # params = word2vec.get_all_params()
+    losses = []
+    for i, batch in enumerate(data_stream.get_batches(batch_size)):
+        queries, contexts = batch
+        losses.append(train(queries, contexts))
 
-    # updates = nesterov_momentum(loss,
-                                # params,
-                                # learning_rate,
-                                # momentum)
-    # updates.update(minibatcher.get_updates())
+        if i % 100 == 0:
+            print('batch {} mean loss {}'.format(i ,np.mean(losses)))
 
-    #train = theano.function([], query_input, updates=minibatcher.get_updates())
-    # train = theano.function([], loss,
-                            # updates=updates, mode='DebugMode')
+        if i % 10000 == 0:
+            word2vec.save(save_dir)
 
-    for epoch in range(num_epochs):
-        #batches = reader.generate_dataset_parallel()
-        batches = reader.generate_dataset_serial()
-        for batch_num, batch in enumerate(batches):
-            print 'running batch {}'.format(batch_num)
-            minibatcher.load_dataset(batch)
-            losses = []
-            for minibatch_num in range(minibatcher.get_num_batches()):
-                print 'running minibatch', batch_num
-                query = train()
-                print 'query {}   context {}'.format(query, None)
+    if save_dir:
+        word2vec.save(save_dir)
 
-            print('batch {} Mean Loss {}'.format(batch_num,np.mean(losses)))
+    import pdb
+    pdb.set_trace()
 
-    # if save_dir:
-        # word2vec.save_embedder(save_dir)
 
-def test(dir, batch_size, num_epochs=3, save_dir=None):
-    print 'Training file directory: ', dir
-    reader = DatasetReader(
-        directories=dir,
-        macrobatch_size=100000,
-        num_processes=3,
-        min_frequency=0,
-        kernel=[1,2,3,4,5,6,7,8,9,10,10,9,8,7,6,5,4,3,2,1],
-        verbose=True)
+def test(load_dir):
+    dictionary = np.load(os.path.join(load_dir, 'dictionary.npy'))
 
-    print 'Reader build !'
+    query_input = T.ivector('query')
+    word2vec = Word2VecNormal(None, None, None, None)
+    word2vec.load_params(load_dir)
+    word2vec.build_model(query_input)
+    word2vec.load_embedder(save_dir)
 
-    if not reader.is_prepared():
-        reader.prepare(save_dir=save_dir)
-
-    print 'Reader prepared !'
-
-    minibatcher = Minibatcher(
-        batch_size=batch_size,
-        dtype="int32",
-        num_dims=2)
-
-    print 'Minibatcher built !'
-
-    print 'Number of epochs: ', num_epochs
-
-    test_train = theano.function([], minibatcher.get_batch(), updates=minibatcher.get_updates())
-
-    for epoch in range(num_epochs):
-        print 'epoch number: ', epoch
-        macrobatches = reader.generate_dataset_serial()
-        macrobatch_num = 0
-        for batch in macrobatches:
-            macrobatch_num += 1
-            print 'running macrobatch {}'.format(macrobatch_num)
-            minibatcher.load_dataset(batch)
-            for minibatch_num in range(minibatcher.get_num_batches()):
-                #print 'running minibatch', minibatch_num
-                query = test_train()
-                print 'query: {} '.format(query)
+    import pdb
+    pdb.set_trace()
 
 
 if __name__ == '__main__':
@@ -119,10 +74,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Word2Vec')
     parser.add_argument('mode', choices=['train', 'test'])
     parser.add_argument('--file', help='file to train off of')
-    parser.add_argument('--dir', help='directory to train off of')
     parser.add_argument('--batch_size', type=int, default=10, help='size of each training batch')
     parser.add_argument('--embed_size', type=int, default=100, help='size of the embedding dimension')
     parser.add_argument('--save_dir', help='directory where dictionary + embedder are saved to/loaded from')
+    parser.add_argument('--load_dir', help='directory where dictionary + embedder are saved to/loaded from')
 
     args = parser.parse_args()
 
@@ -130,12 +85,7 @@ if __name__ == '__main__':
         raise Exception('Must specify training file if in train mode')
 
     if args.mode == 'train':
-        train([args.file], args.batch_size, args.embed_size, save_dir=args.save_dir)
+        train([args.file], args.batch_size, args.embed_size,
+              save_dir=args.save_dir, load_dir=args.load_dir)
     elif args.mode == 'test':
-        test([args.dir], args.batch_size, args.embed_size, save_dir=args.save_dir)
-    else:
-        raise Exception('Must specify either train or test')
-
-
-
-
+        test(args.load_dir)

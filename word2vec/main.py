@@ -16,7 +16,7 @@ from dataset import Dataset
 def train(files, batch_size, emb_dim_size, save_dir, load_dir):
     learning_rate = 0.1
     momentum = 0.9
-    num_epochs = 3
+    num_epochs = 100000
 
     dataset = Dataset(files, load_dir=load_dir)
     data_stream = dataset.data_stream
@@ -25,6 +25,7 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir):
 
     dictionary = dataset.dictionary
     reverse_dictionary = dict((v, k) for k, v in dictionary.iteritems())
+    print 'Dictionary size: ', len(dictionary)
 
     query_input = T.ivector('query')
     context_target = T.ivector('context')
@@ -35,7 +36,7 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir):
     word2vec.build_model(query_input)
 
     prediction = word2vec.get_output()
-    loss = categorical_crossentropy(prediction, context_target)
+    loss = lasagne.objectives.squared_error(prediction, context_target)
     loss = loss.mean()
     params = word2vec.get_all_params()
     updates = nesterov_momentum(loss, params, learning_rate, momentum)
@@ -44,20 +45,29 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir):
                             updates=updates)
 
     losses = []
-    for i, batch in enumerate(data_stream.get_batches(batch_size)):
-        queries, contexts = batch
-        losses.append(train(queries, contexts))
 
-        if i % 100 == 0:
-            print('batch {} mean loss {}'.format(i ,np.mean(losses)))
-            import pdb
-            pdb.set_trace()
+    for epoch in range(num_epochs):
 
-        if save_dir and i % 10000 == 0:
-            word2vec.save(save_dir)
+        for i, batch in enumerate(data_stream.get_batches(batch_size)):
+            queries, contexts = batch
+            losses.append(train(queries, contexts))
+
+            if save_dir and i % 10000 == 0:
+                word2vec.save(save_dir)
+
+        if epoch % 1000 == 0:
+            print 'Epoch number: ', epoch
+            print('epoch {} mean loss {}'.format(epoch, np.mean(losses)))
+        #print 'Embedding for king is: ', word2vec.embed([dictionary['king']])
 
     if save_dir:
         word2vec.save(save_dir)
+
+    print 'Top similar words: '
+    results = [(word, spatial.distance.euclidean(word2vec.embed([dictionary['king']]), word2vec.embed([dictionary[word]]))) for (word, _) in dictionary.iteritems()]
+    results.sort(key=operator.itemgetter(1))
+    out = [r[0] for r in results]
+    print 'closest to {} : {}'.format('king', out)
 
     import pdb
     pdb.set_trace()

@@ -42,8 +42,8 @@ class Dataset:
                              eos_token=None,
                              preprocess=self._preprocess)
         stream = DataStream(text_data)
-        self.data_stream = SkipGram(skip_window=10,
-                                    num_skips=20,
+        self.data_stream = SkipGram(skip_window=3,
+                                    num_skips=4,
                                     data_stream=stream)
 
     def _preprocess(self, s):

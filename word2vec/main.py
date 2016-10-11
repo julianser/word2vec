@@ -13,12 +13,16 @@ from word2vec import Word2VecDiscrete
 from dataset import Dataset
 
 
-def train(files, batch_size, emb_dim_size, save_dir, load_dir):
+def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
+          num_skips):
     learning_rate = 0.1
     momentum = 0.9
     num_epochs = 100000
 
-    dataset = Dataset(files, load_dir=load_dir)
+    dataset = Dataset(files,
+                      load_dir=load_dir,
+                      skip_window=skip_window,
+                      num_skips=num_skips)
     data_stream = dataset.data_stream
     if save_dir:
         dataset.save_dictionary(save_dir)
@@ -117,8 +121,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Word2Vec')
     parser.add_argument('mode', choices=['train', 'test'])
     parser.add_argument('--file', help='file to train off of')
-    parser.add_argument('--batch_size', type=int, default=10, help='size of each training batch')
-    parser.add_argument('--embed_size', type=int, default=100, help='size of the embedding dimension')
+    parser.add_argument('--batch_size', type=int, default=10,
+                        help='size of each training batch')
+    parser.add_argument('--embed_size', type=int, default=100,
+                        help='size of the embedding dimension')
+    parser.add_argument('--skip_window', type=int, default=5,
+                        help='context window on either side of a word for skip-gram')
+    parser.add_argument('--num_skips', type=int, default=100,
+                        help='number of context words to sample from the 2*skip_window possible')
     parser.add_argument('--save_dir', help='directory where dictionary + embedder are saved to/loaded from')
     parser.add_argument('--load_dir', help='directory where dictionary + embedder are saved to/loaded from')
 
@@ -129,6 +139,7 @@ if __name__ == '__main__':
 
     if args.mode == 'train':
         train([args.file], args.batch_size, args.embed_size,
-              save_dir=args.save_dir, load_dir=args.load_dir)
+              save_dir=args.save_dir, load_dir=args.load_dir,
+              skip_window=args.skip_window, num_skips=args.num_skips)
     elif args.mode == 'test':
         test(args.load_dir)

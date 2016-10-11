@@ -20,7 +20,7 @@ table = string.maketrans("", "")
 
 class Dataset:
     def __init__(self, files, vocabulary_size=None, min_count=None,
-                 load_dir=None):
+                 load_dir=None, skip_window=3, num_skips=4):
         if load_dir is not None:
             self.dictionary = self.load_dictionary(load_dir)
         else:
@@ -42,8 +42,8 @@ class Dataset:
                              eos_token=None,
                              preprocess=self._preprocess)
         stream = DataStream(text_data)
-        self.data_stream = SkipGram(skip_window=3,
-                                    num_skips=4,
+        self.data_stream = SkipGram(skip_window=skip_window,
+                                    num_skips=num_skips,
                                     data_stream=stream)
 
     def _preprocess(self, s):
@@ -130,8 +130,9 @@ class SkipGram(Transformer):
                             len(self.sentence) - 1)
             self.target_indices = range(min_index, self.source_index) +  \
                 range(self.source_index+1, max_index+1)
+            # shuffle so .pop is a random sampling
+            random.shuffle(self.target_indices)
 
-        # TODO(michael) change to random sampling?
         self.target_index = self.target_indices.pop()
         self.skip_counter += 1
         source = self.sentence[self.source_index]

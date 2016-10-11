@@ -26,7 +26,7 @@ class Stochastic_Op(theano.Op):
 
     def perform(self, node, input_storage, output_storage, params=None):
         x, = input_storage
-        y = self.rng.multinomial(n=1,pvals=x)
+        y = self.rng.multinomial(n=1, pvals=x)
         print('Performing Op...')
         output_storage[0][0] = y
 

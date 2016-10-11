@@ -1,6 +1,5 @@
 import os
 import operator
-
 import lasagne
 from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy

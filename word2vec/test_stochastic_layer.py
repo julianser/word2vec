@@ -48,10 +48,11 @@ def test_stochastic_layer_network():
     train = theano.function([input, output], loss,
                             updates=updates, allow_input_downcast=True)
     output_fn = theano.function([input], network_output, allow_input_downcast=True)
+
     test_X = np.ones((10, 10))
     test_Y = np.ones((10, 1))
-
     losses = []
+
     for epoch in range(num_epoch):
 
         losses.append(train(test_X, test_Y))

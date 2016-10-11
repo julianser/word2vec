@@ -1,7 +1,6 @@
 import theano
 from theano.sandbox.rng_mrg import MRG_RandomStreams
 import theano.tensor as tensor
-import numpy as np
 import hyperparameters
 
 class Stochastic_Op(theano.Op):

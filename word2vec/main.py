@@ -125,9 +125,9 @@ if __name__ == '__main__':
                         help='size of each training batch')
     parser.add_argument('--embed_size', type=int, default=100,
                         help='size of the embedding dimension')
-    parser.add_argument('--skip_window', type=int, default=5,
+    parser.add_argument('--skip_window', type=int, default=3,
                         help='context window on either side of a word for skip-gram')
-    parser.add_argument('--num_skips', type=int, default=100,
+    parser.add_argument('--num_skips', type=int, default=4,
                         help='number of context words to sample from the 2*skip_window possible')
     parser.add_argument('--save_dir', help='directory where dictionary + embedder are saved to/loaded from')
     parser.add_argument('--load_dir', help='directory where dictionary + embedder are saved to/loaded from')

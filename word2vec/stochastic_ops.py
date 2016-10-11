@@ -31,7 +31,7 @@ class Stochastic_Op(theano.Op):
     def grad(self, inp, grads):
         if self.estimator == 'ST':
             g_sm, = grads
-            return [ST_grad_estimator(g_sm)]
+            return [ST_estimator(g_sm)]
         raise NotImplementedError('Estimator Not Implemented.')
 
     def infer_shape(self, node, shape):

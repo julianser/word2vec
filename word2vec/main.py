@@ -12,6 +12,8 @@ from word2vec import Word2VecNormal
 from word2vec import Word2VecDiscrete
 from dataset import Dataset
 
+theano.config.exception_verbosity='high'
+theano.config.optimizer='fast_compile'
 
 def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
           num_skips):
@@ -33,7 +35,7 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
 
     query_input = T.ivector('query')
     context_target = T.ivector('context')
-    word2vec = Word2VecNormal(batch_size=batch_size,
+    word2vec = Word2VecDiscrete(batch_size=batch_size,
                                 context_vocab_size=dataset.vocab_size,
                                 query_vocab_size=dataset.vocab_size,
                                 emb_dim_size=emb_dim_size)

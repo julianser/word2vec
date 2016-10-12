@@ -35,7 +35,7 @@ def test_stochastic_layer_network():
     l_2 = L.DenseLayer(l_in, num_units=3, nonlinearity=lasagne.nonlinearities.softmax)
     print 'Input Layer shape:  ', L.get_output_shape(l_in)
     print 'Dense Layer shape: ', L.get_output_shape(l_2)
-    l_stochastic_layer = StochasticLayer(l_2)
+    l_stochastic_layer = StochasticLayer(l_2, estimator='ST')
     print 'Stochastic Layer shape:  ', L.get_output_shape(l_stochastic_layer)
     l_out = L.DenseLayer(l_stochastic_layer, num_units=1)
     print 'Final Dense Layer shape: ', L.get_output_shape(l_out)
@@ -60,7 +60,7 @@ def test_stochastic_layer_network():
         print('Current Output: ', output_fn(test_X))
 
 
-#test_stochastic_layer_network()
+test_stochastic_layer_network()
 #test_stochastic_layer_forward_pass()
 
 

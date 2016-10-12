@@ -1,4 +1,5 @@
 import theano
+import numpy as np
 from theano.sandbox.rng_mrg import MRG_RandomStreams
 import theano.tensor as tensor
 import hyperparameters
@@ -8,7 +9,7 @@ class Stochastic_Op(theano.Op):
     nout = 1
     __props__ = ()
 
-    def __init__(self, estimator):
+    def __init__(self, estimator='ST'):
         super(Stochastic_Op, self).__init__()
         self.rng = MRG_RandomStreams(hyperparameters.RANDOM_SEED)
         self.estimator = estimator
@@ -28,9 +29,12 @@ class Stochastic_Op(theano.Op):
         output_storage[0][0] = y.eval()
 
     def grad(self, inp, grads):
-        if self.estimator == 'ST':
-            g_sm, = grads
-            return [ST_estimator(g_sm)]
+        x, = inp
+        g_sm, = grads
+        if self.estimator == 'MF':
+            return [MF_estimator(g_sm)]
+        elif self.estimator == 'ST':
+            return [ST_estimator(g_sm*x)]
         raise NotImplementedError('Estimator Not Implemented.')
 
     def infer_shape(self, node, shape):
@@ -47,9 +51,7 @@ class Stochastic_Op(theano.Op):
         raise NotImplementedError('C code not implemented')
 
 
-Stochastic_Op = Stochastic_Op(estimator=hyperparameters.ESTIMATOR)
-
-class ST_grad_estimator(theano.Op):
+class MF_grad_estimator(theano.Op):
     def make_node(self,dy):
         if dy.type.ndim not in (1, 2) \
                 or dy.type.dtype not in tensor.float_dtypes:
@@ -68,5 +70,28 @@ class ST_grad_estimator(theano.Op):
 
     def infer_shape(self, node, shape):
         return shape
+
+MF_estimator = MF_grad_estimator()
+
+class ST_grad_estimator(theano.Op):
+    def make_node(self, dy):
+        if dy.type.ndim not in (1, 2) \
+                or dy.type.dtype not in tensor.float_dtypes:
+            raise ValueError('dy must be 1-d or 2-d tensor of floats. Got ',
+                             dy.type)
+        if dy.ndim == 1:
+            dy = tensor.shape_padleft(dy, n_ones=1)
+        return theano.Apply(self, [dy], [dy.type()])
+
+    def perform(self, node, input_storage, output_storage, params=None):
+        dy, = input_storage
+        output_storage[0][0] = dy
+
+    def grad(self):
+        raise NotImplementedError('Estimators have no gradient.')
+
+    def infer_shape(self, node, shape):
+        return shape
+
 
 ST_estimator = ST_grad_estimator()

@@ -41,7 +41,7 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
     word2vec.build_model(query_input)
 
     prediction = word2vec.get_output()
-    loss = lasagne.objectives.squared_error(prediction, context_target)
+    loss = lasagne.objectives.categorical_crossentropy(prediction, context_target)
     loss = loss.mean()
     params = word2vec.get_all_params()
     updates = nesterov_momentum(loss, params, learning_rate, momentum)

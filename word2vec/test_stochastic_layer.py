@@ -1,4 +1,5 @@
 import theano.tensor as T
+from matplotlib import pyplot as plt
 import lasagne
 import lasagne.layers as L
 from lasagne.updates import nesterov_momentum
@@ -25,19 +26,18 @@ def test_stochastic_layer_forward_pass():
 def test_stochastic_layer_network():
     learning_rate = 0.1
     momentum = 0.9
-    num_epoch = 10000
-
+    num_epoch = 100
     input = T.fmatrix('input')
     output = T.fmatrix('output')
     print 'FF-Layer: (Batch_size, n_features)'
     print 'Building stochastic layer model'
     l_in = L.InputLayer(shape=(10,10), input_var=input)
-    l_2 = L.DenseLayer(l_in, num_units=3, nonlinearity=lasagne.nonlinearities.softmax)
+    l_2 = L.DenseLayer(l_in, num_units=3, nonlinearity=lasagne.nonlinearities.softmax, W=lasagne.init.Constant(0.))
     print 'Input Layer shape:  ', L.get_output_shape(l_in)
     print 'Dense Layer shape: ', L.get_output_shape(l_2)
-    l_stochastic_layer = StochasticLayer(l_2, estimator='ST')
+    l_stochastic_layer = StochasticLayer(l_2, estimator='MF')
     print 'Stochastic Layer shape:  ', L.get_output_shape(l_stochastic_layer)
-    l_out = L.DenseLayer(l_stochastic_layer, num_units=1)
+    l_out = L.DenseLayer(l_stochastic_layer, num_units=1, W=lasagne.init.Constant(0.))
     print 'Final Dense Layer shape: ', L.get_output_shape(l_out)
     network_output = L.get_output(l_out)
     print 'Building loss function...'
@@ -52,13 +52,22 @@ def test_stochastic_layer_network():
     test_X = np.ones((10, 10))
     test_Y = np.ones((10, 1))
     losses = []
-
+    mean_losses = []
     for epoch in range(num_epoch):
-
+        print 'Epoch number: ', epoch
         losses.append(train(test_X, test_Y))
-        print('epoch {} mean loss {}'.format(epoch, np.mean(losses)))
-        print('Current Output: ', output_fn(test_X))
+        #print('epoch {} mean loss {}'.format(epoch, np.mean(losses)))
+        #print('Current Output: ', output_fn(test_X))
+        mean_losses.append(np.mean(losses))
 
+    plt.title("Mean loss")
+    plt.xlabel("Training examples")
+    plt.ylabel("Loss")
+    plt.plot(mean_losses, label="train")
+    plt.grid()
+    plt.legend()
+    plt.draw()
+    plt.show()
 
 test_stochastic_layer_network()
 #test_stochastic_layer_forward_pass()

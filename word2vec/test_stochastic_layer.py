@@ -26,7 +26,7 @@ def test_stochastic_layer_forward_pass():
 def test_stochastic_layer_network():
     learning_rate = 0.1
     momentum = 0.9
-    num_epoch = 100
+    num_epoch = 1000
     input = T.fmatrix('input')
     output = T.fmatrix('output')
     print 'FF-Layer: (Batch_size, n_features)'
@@ -38,7 +38,7 @@ def test_stochastic_layer_network():
                        W=lasagne.init.Constant(0.))
     print 'Input Layer shape:  ', L.get_output_shape(l_in)
     print 'Dense Layer shape: ', L.get_output_shape(l_2)
-    l_stochastic_layer = StochasticLayer(l_2, estimator='MF')
+    l_stochastic_layer = StochasticLayer(l_2, estimator='ST')
     print 'Stochastic Layer shape:  ', L.get_output_shape(l_stochastic_layer)
     l_out = L.DenseLayer(l_stochastic_layer,
                          num_units=10,
@@ -48,11 +48,11 @@ def test_stochastic_layer_network():
     print 'Building loss function...'
     loss = lasagne.objectives.squared_error(network_output, output)
     loss = loss.mean()
-    #params = L.get_all_params(l_2, trainable=True)
-    updates = nesterov_momentum(loss, l_2.get_params(), learning_rate, momentum)
+    params = L.get_all_params(l_out, trainable=True)
+    updates = nesterov_momentum(loss, params, learning_rate, momentum)
     train = theano.function([input, output], loss,
                             updates=updates, allow_input_downcast=True)
-    output_fn = theano.function([input], L.get_output(l_2), allow_input_downcast=True)
+    output_fn = theano.function([input], network_output, allow_input_downcast=True)
 
     test_X = np.ones((1, 10))
     test_Y = np.ones((1, 10))
@@ -61,8 +61,8 @@ def test_stochastic_layer_network():
     for epoch in range(num_epoch):
         print 'Epoch number: ', epoch
         losses.append(train(test_X, test_Y))
-        print('epoch {} mean loss {}'.format(epoch, np.mean(losses)))
-        print('Current Output: ', output_fn(test_X))
+        print 'epoch {} mean loss {}'.format(epoch, np.mean(losses))
+        print 'Current Output: ', output_fn(test_X)
         mean_losses.append(np.mean(losses))
 
     plt.title("Mean loss")

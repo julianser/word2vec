@@ -90,19 +90,19 @@ class Word2VecDiscrete(Word2VecBase):
               context_vocab_size, emb_dim_size):
         l_input = L.InputLayer(shape=(batch_size,),
                                input_var=query_input)
-        l_embed_continuous = L.EmbeddingLayer(l_input,
-                                              input_size=query_vocab_size,
-                                              output_size=emb_dim_size)
+        #l_embed_continuous = L.EmbeddingLayer(l_input,
+        #                                      input_size=query_vocab_size,
+        #                                      output_size=emb_dim_size)
         l_values_discrete = L.EmbeddingLayer(l_input,
                                              input_size=query_vocab_size,
-                                             output_size=emb_dim_size)
+                                             output_size=3)
         l_probabilities_discrete = L.NonlinearityLayer(
             l_values_discrete,
             nonlinearity=lasagne.nonlinearities.softmax)
         l_embed_discrete = StochasticLayer(l_probabilities_discrete)
-        l_merge = L.ElemwiseSumLayer([l_embed_continuous, l_embed_discrete])
-        l_out = L.DenseLayer(l_merge,
+        #l_merge = L.ElemwiseSumLayer([l_embed_continuous, l_embed_discrete])
+        l_out = L.DenseLayer(l_embed_discrete,
                              num_units=context_vocab_size,
                              nonlinearity=lasagne.nonlinearities.softmax)
 
-        return l_merge, l_out
+        return l_values_discrete, l_out

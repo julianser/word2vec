@@ -1,6 +1,5 @@
 import theano
 import numpy as np
-from theano.sandbox.rng_mrg import MRG_RandomStreams
 import theano.tensor as tensor
 import hyperparameters
 
@@ -11,7 +10,7 @@ class Stochastic_Op(theano.Op):
 
     def __init__(self, estimator='ST'):
         super(Stochastic_Op, self).__init__()
-        self.rng = MRG_RandomStreams(hyperparameters.RANDOM_SEED)
+        self.rng = np.random.RandomState(hyperparameters.RANDOM_SEED)
         self.estimator = estimator
 
     def make_node(self, x):
@@ -25,8 +24,10 @@ class Stochastic_Op(theano.Op):
 
     def perform(self, node, input_storage, output_storage, params=None):
         x, = input_storage
-        y = self.rng.multinomial(n=1, pvals=x)
-        output_storage[0][0] = y.eval()
+        y = self.rng.multinomial(n=1, pvals=x[0])
+        y_out = np.ndarray(shape=x.shape)
+        y_out[0] = y
+        output_storage[0][0] = y_out
 
     def grad(self, inp, grads):
         x, = inp

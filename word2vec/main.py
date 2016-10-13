@@ -1,6 +1,7 @@
 import os
 import operator
 import lasagne
+import time
 from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy
 import numpy as np
@@ -18,7 +19,7 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
           num_skips):
     learning_rate = 0.1
     momentum = 0.9
-    num_epochs = 100000
+    num_epochs = 1000
 
     dataset = Dataset(files,
                       load_dir=load_dir,
@@ -50,7 +51,7 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
                             updates=updates)
 
     losses = []
-
+    start = time.time()
     for epoch in range(num_epochs):
 
         for i, batch in enumerate(data_stream.get_batches(batch_size)):
@@ -60,13 +61,15 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
             if save_dir and i % 10000 == 0:
                 word2vec.save(save_dir)
 
-        if epoch % 1000 == 0:
-            print 'Epoch number: ', epoch
-            print('epoch {} mean loss {}'.format(epoch, np.mean(losses)))
+        # if epoch % 1000 == 0:
+        print 'Epoch number: ', epoch
+        print('epoch {} mean loss {}'.format(epoch, np.mean(losses)))
         #print 'Embedding for king is: ', word2vec.embed([dictionary['king']])
 
     if save_dir:
         word2vec.save(save_dir)
+    end = time.time()
+    print("Time: ", end - start)
 
     print 'Top similar words: '
     results = [(word, spatial.distance.euclidean(word2vec.embed([dictionary['king']]), word2vec.embed([dictionary[word]]))) for (word, _) in dictionary.iteritems()]
@@ -74,8 +77,14 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
     out = [r[0] for r in results]
     print 'closest to {} : {}'.format('king', out)
 
-    import pdb
-    pdb.set_trace()
+    print 'Top similar words: '
+    results = [
+        (word, spatial.distance.euclidean(word2vec.embed([dictionary['queen']]), word2vec.embed([dictionary[word]]))) for
+        (word, _) in dictionary.iteritems()]
+    results.sort(key=operator.itemgetter(1))
+    out = [r[0] for r in results]
+    print 'closest to {} : {}'.format('queen', out)
+
 
 
 def test(load_dir):

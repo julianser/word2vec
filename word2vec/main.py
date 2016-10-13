@@ -33,17 +33,13 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
     reverse_dictionary = dict((v, k) for k, v in dictionary.iteritems())
     print 'Dictionary size: ', len(dictionary)
 
-    query_input = T.ivector('query')
-    context_target = T.ivector('context')
     word2vec = Word2VecDiscrete(batch_size=batch_size,
                                 context_vocab_size=dataset.vocab_size,
                                 query_vocab_size=dataset.vocab_size,
                                 emb_dim_size=emb_dim_size)
-    word2vec.build_model(query_input)
+    word2vec.build_model()
 
-    prediction = word2vec.get_output()
-    loss = lasagne.objectives.categorical_crossentropy(prediction, context_target)
-    loss = loss.mean()
+    loss = word2vec.sigmoid_loss()
     params = word2vec.get_all_params()
     updates = nesterov_momentum(loss, params, learning_rate, momentum)
 

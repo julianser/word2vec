@@ -15,33 +15,42 @@ class Word2VecBase:
         self.query_vocab_size = query_vocab_size
         self.context_vocab_size = context_vocab_size
         self.emb_dim_size = emb_dim_size
+        self.query = T.ivector('query')
+        self.context = T.ivector('context')
 
-    def build_model(self, query_input):
-        self.embed_network, self.network = self.model(query_input,
-                                                      self.batch_size,
-                                                      self.query_vocab_size,
-                                                      self.context_vocab_size,
-                                                      self.emb_dim_size)
+    def build_model(self):
+        (self.query_network,
+         self.context_network) = self.model(self.query,
+                                            self.context,
+                                            self.batch_size,
+                                            self.query_vocab_size,
+                                            self.context_vocab_size,
+                                            self.emb_dim_size)
 
-        self.embed = theano.function([query_input],
-                                     L.get_output(self.embed_network))
+        self.query_embedding = L.get_output(self.query_network)
+        self.context_embedding = L.get_output(self.context_network)
 
-    def model(self, query_input, batch_size, query_vocab_size,
+        self.embed = theano.function([self.query], self.query_embedding)
+
+    def model(self, query, context, batch_size, query_vocab_size,
               context_vocab_size, emb_dim_size):
         raise NotImplementedError
 
-    def get_output(self):
-        return L.get_output(self.network)
+    def sigmoid_loss(self):
+        loss_vector = self.query_embedding * self.context_embedding
+        loss = loss_vector.sum()
+        return theano.tensor.nnet.sigmoid(loss)
 
     def get_all_params(self):
-        return L.get_all_params(self.network, trainable=True)
+        return L.get_all_params(self.query_network, trainable=True) + \
+            L.get_all_params(self.context_network, trainable=True)
 
     def save(self, save_dir):
         params = [self.batch_size,
                   self.query_vocab_size,
                   self.context_vocab_size,
                   self.emb_dim_size]
-        values = L.get_all_param_values(self.embed_network)
+        values = L.get_all_param_values(self.query_network)
 
         filename = os.path.join(save_dir, 'network_params.save')
         with open(filename, 'wb') as f:
@@ -62,13 +71,31 @@ class Word2VecBase:
             self.emb_dim_size) = params
 
     def load_embedder(self, save_dir):
-        if not self.embed_network:
+        if not self.query_network:
             raise Exception('Must build model before loading embedding values')
 
         filename = os.path.join(save_dir, 'embedder_values.save')
         with open(filename, 'rb') as f:
             values = cPickle.load(f)
-            L.set_all_param_values(self.embed_network, values)
+            L.set_all_param_values(self.query_network, values)
+
+
+class Word2Vec(Word2VecBase):
+    def model(self, query, context, batch_size, query_vocab_size,
+              context_vocab_size, emb_dim_size):
+        l_query_input = L.InputLayer(shape=(batch_size,),
+                                     input_var=query)
+        l_query_embed = L.EmbeddingLayer(l_input,
+                                   input_size=query_vocab_size,
+                                   output_size=emb_dim_size)
+        l_context_input = L.InputLayer(shape=(batch_size,),
+                                       input_var=context)
+        l_context_embed = L.EmbeddingLayer(l_input,
+                                   input_size=context_vocab_size,
+                                   output_size=emb_dim_size)
+        # l_out = L.ElemwiseMergeLayer([l_query_embed, l_context_embed],
+                                     # theano.tensor.mul)
+        return l_query_embed, l_context_embed
 
 
 class Word2VecNormal(Word2VecBase):

@@ -72,7 +72,7 @@ def test_stochastic_layer_network():
     plt.grid()
     plt.legend()
     plt.draw()
-    plt.show()
+    #plt.show()
 
 test_stochastic_layer_network()
 #test_stochastic_layer_forward_pass()

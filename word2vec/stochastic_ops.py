@@ -30,12 +30,12 @@ class Stochastic_Op(theano.Op):
         output_storage[0][0] = y_out
 
     def grad(self, inp, grads):
-        x, = inp
         g_sm, = grads
         if self.estimator == 'MF':
             return [MF_estimator(g_sm)]
         elif self.estimator == 'ST':
-            return [ST_estimator(g_sm*x)]
+            output = self(*inp)
+            return [ST_estimator(g_sm*output)]
         raise NotImplementedError('Estimator Not Implemented.')
 
     def infer_shape(self, node, shape):
@@ -64,6 +64,7 @@ class MF_grad_estimator(theano.Op):
 
     def perform(self, node, input_storage, output_storage, params=None):
         dy, = input_storage
+        print "Grad Op input: ", dy[0]
         output_storage[0][0] = dy
 
     def grad(self):
@@ -86,6 +87,7 @@ class ST_grad_estimator(theano.Op):
 
     def perform(self, node, input_storage, output_storage, params=None):
         dy, = input_storage
+        print "Grad Op input: ", dy[0]
         output_storage[0][0] = dy
 
     def grad(self):

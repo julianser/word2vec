@@ -2,6 +2,7 @@ import os
 import operator
 import lasagne
 import time
+from matplotlib import pyplot as plt
 from lasagne.updates import nesterov_momentum
 from lasagne.objectives import categorical_crossentropy
 import numpy as np
@@ -51,9 +52,11 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
                             updates=updates)
 
     losses = []
+    mean_losses= []
     start = time.time()
     for epoch in range(num_epochs):
 
+        mean_loss = 0
         for i, batch in enumerate(data_stream.get_batches(batch_size)):
             queries, contexts = batch
             losses.append(train(queries, contexts))
@@ -61,9 +64,12 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
             if save_dir and i % 10000 == 0:
                 word2vec.save(save_dir)
 
-        # if epoch % 1000 == 0:
-        print 'Epoch number: ', epoch
-        print('epoch {} mean loss {}'.format(epoch, np.mean(losses)))
+            mean_loss = np.mean(losses)
+
+        mean_losses.append(mean_loss)
+
+        if epoch % 1 == 0:
+            print('epoch {} mean loss {}'.format(epoch, mean_loss))
         #print 'Embedding for king is: ', word2vec.embed([dictionary['king']])
 
     if save_dir:
@@ -85,6 +91,14 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
     out = [r[0] for r in results]
     print 'closest to {} : {}'.format('queen', out)
 
+    plt.title("Mean loss")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.plot(mean_losses, label="train")
+    plt.grid()
+    plt.legend()
+    plt.draw()
+    plt.show()
 
 
 def test(load_dir):

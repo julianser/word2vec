@@ -1,6 +1,6 @@
 import os
 from six.moves import cPickle
-
+import theano.tensor as T
 import theano
 import lasagne
 from lasagne import layers as L
@@ -90,19 +90,21 @@ class Word2VecDiscrete(Word2VecBase):
               context_vocab_size, emb_dim_size):
         l_input = L.InputLayer(shape=(batch_size,),
                                input_var=query_input)
-        #l_embed_continuous = L.EmbeddingLayer(l_input,
-        #                                      input_size=query_vocab_size,
-        #                                      output_size=emb_dim_size)
+        l_embed_continuous = L.EmbeddingLayer(l_input,
+                                              input_size=query_vocab_size,
+                                             output_size=emb_dim_size)
         l_values_discrete = L.EmbeddingLayer(l_input,
                                              input_size=query_vocab_size,
-                                             output_size=3)
+                                             output_size=emb_dim_size)
         l_probabilities_discrete = L.NonlinearityLayer(
             l_values_discrete,
             nonlinearity=lasagne.nonlinearities.softmax)
-        l_embed_discrete = StochasticLayer(l_probabilities_discrete)
-        #l_merge = L.ElemwiseSumLayer([l_embed_continuous, l_embed_discrete])
-        l_out = L.DenseLayer(l_embed_discrete,
-                             num_units=context_vocab_size,
+        l_embed_discrete = StochasticLayer(l_probabilities_discrete, estimator='MF')
+        l_merge = L.ElemwiseSumLayer([l_embed_continuous, l_embed_discrete])
+        l_out = L.DenseLayer(l_merge,
+                             num_units=emb_dim_size,
                              nonlinearity=lasagne.nonlinearities.softmax)
 
-        return l_values_discrete, l_out
+        l_merge_2 = L.ElemwiseMergeLayer([l_out, l_embed_discrete], merge_function=T.mul)
+        l_final_out = L.DenseLayer(l_merge_2, num_units=context_vocab_size)
+        return l_values_discrete, l_final_out

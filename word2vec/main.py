@@ -8,6 +8,7 @@ import numpy as np
 from scipy import spatial
 import theano
 from theano import tensor as T
+from word2vec import Word2Vec
 from word2vec import Word2VecNormal
 from word2vec import Word2VecDiscrete
 from dataset import Dataset
@@ -31,12 +32,13 @@ def train(files, batch_size, emb_dim_size, save_dir, load_dir, skip_window,
 
     dictionary = dataset.dictionary
     reverse_dictionary = dict((v, k) for k, v in dictionary.iteritems())
+    ordered_vocabulary = sorted(dictionary.values())
     print 'Dictionary size: ', len(dictionary)
 
-    word2vec = Word2VecDiscrete(batch_size=batch_size,
-                                context_vocab_size=dataset.vocab_size,
-                                query_vocab_size=dataset.vocab_size,
-                                emb_dim_size=emb_dim_size)
+    word2vec = Word2Vec(batch_size=batch_size,
+                        context_vocab_size=dataset.vocab_size,
+                        query_vocab_size=dataset.vocab_size,
+                        emb_dim_size=emb_dim_size)
     word2vec.build_model()
 
     loss = word2vec.sigmoid_loss()

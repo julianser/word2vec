@@ -2,6 +2,7 @@ import os
 from six.moves import cPickle
 
 import theano
+from theano import tensor as T
 import lasagne
 from lasagne import layers as L
 
@@ -36,10 +37,24 @@ class Word2VecBase:
               context_vocab_size, emb_dim_size):
         raise NotImplementedError
 
+
+    def softmax_loss(self, vocabulary):
+        similarity = T.batched_dot(self.query_embedding, self.context_embedding)
+        all_contexts = T.TensorVariable([vocabulary]*self.batch_size)
+        all_contexts.dimshuffle(1,0)
+        theano.scan(fn=lambda batch
+
+        L.get_output(self.context_network,
+        other_similarities = T.batched_dot(self.query_embedding * self.context_network
+
+
     def sigmoid_loss(self):
         loss_vector = self.query_embedding * self.context_embedding
-        loss = loss_vector.sum()
-        return theano.tensor.nnet.sigmoid(loss)
+        loss = loss_vector.sum(1)
+        return T.nnet.sigmoid(loss)
+
+    def negative_sampling_loss(self):
+
 
     def get_all_params(self):
         return L.get_all_params(self.query_network, trainable=True) + \
@@ -85,12 +100,12 @@ class Word2Vec(Word2VecBase):
               context_vocab_size, emb_dim_size):
         l_query_input = L.InputLayer(shape=(batch_size,),
                                      input_var=query)
-        l_query_embed = L.EmbeddingLayer(l_input,
+        l_query_embed = L.EmbeddingLayer(l_query_input,
                                    input_size=query_vocab_size,
                                    output_size=emb_dim_size)
         l_context_input = L.InputLayer(shape=(batch_size,),
                                        input_var=context)
-        l_context_embed = L.EmbeddingLayer(l_input,
+        l_context_embed = L.EmbeddingLayer(l_context_input,
                                    input_size=context_vocab_size,
                                    output_size=emb_dim_size)
         # l_out = L.ElemwiseMergeLayer([l_query_embed, l_context_embed],

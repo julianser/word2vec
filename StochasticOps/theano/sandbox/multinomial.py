@@ -212,7 +212,7 @@ class MultinomialFromUniform(Op):
 
 
 ###
-### Stochastic Ops: Mean Field + Straight-through Estimators
+### Stochastic Ops: Mean Field + Straight-Through Estimators
 ###
 
 class MultinomialFromUniform_MeanField(Op):
@@ -285,7 +285,7 @@ class MultinomialFromUniform_MeanField(Op):
         pvals, unis, n = ins
         (gz,) = outgrads
         return [T.zeros_like(x, dtype=theano.config.floatX) if x.dtype in
-                T.discrete_dtypes else ST_estimator(gz) for x in ins]
+                T.discrete_dtypes else identity_grad_estimator(gz) for x in ins]
 
 
 class MultinomialFromUniform_StraightThrough(Op):
@@ -355,34 +355,18 @@ class MultinomialFromUniform_StraightThrough(Op):
                 z[0][n, numpy.searchsorted(cumsum, unis_n)] += 1
 
     def grad(self, ins, outgrads):
-        # Recompute output sample
         pvals, unis, n = ins
 
-        # TODO: We have a big problem!
-        #       The uniform values 'unis' in grad() function are not equivalent to the 'unis' values in perform().
-        #       This means the straight-through estimator is NOT back-propagating the correct index.
-        #
-        #       The reason seems to be that the calls to grad() samples a new uniform variable,
-        #       and we don't want that. We need to talk to Fred or some other Theano expert to resolve this...
-
+        # Recompute output sample
         out = self(*ins)
-        Apply(self, [pvals, unis, as_scalar(n)], [out])
 
         (gz,) = outgrads
 
         return [T.zeros_like(x, dtype=theano.config.floatX) if x.dtype in
-                T.discrete_dtypes else ST_estimator(gz)*out.astype('float32') for x in ins]
-
-        # Debugging:
-        #return [T.zeros_like(x, dtype=theano.config.floatX) if x.dtype in
-        #        T.discrete_dtypes else out.astype('float32') for x in ins]
-        #return [T.zeros_like(x, dtype=theano.config.floatX) if x.dtype in
-        #        T.discrete_dtypes else pvals for x in ins]
-        #return [T.zeros_like(x, dtype=theano.config.floatX) if x.dtype in
-        #        T.discrete_dtypes else (out+T.addbroadcast(unis,0)).astype('float32') for x in ins]
+                T.discrete_dtypes else identity_grad_estimator(gz)*out.astype('float32') for x in ins]
 
 
-class ST_grad_estimator(theano.Op):
+class Identity_grad_estimator(theano.Op):
     def make_node(self, dy):
         if dy.type.ndim not in (1, 2) \
                 or dy.type.dtype not in T.float_dtypes:
@@ -403,7 +387,7 @@ class ST_grad_estimator(theano.Op):
         return shape
 
 
-ST_estimator = ST_grad_estimator()
+identity_grad_estimator = Identity_grad_estimator()
 
 
 class MultinomialWOReplacementFromUniform(MultinomialFromUniform):
@@ -818,3 +802,4 @@ def local_gpu_multinomial(node):
             # The dimshuffle is on the cpu, but will be moved to the
             # gpu by an opt.
             return [gpu_from_host(ret)]
+

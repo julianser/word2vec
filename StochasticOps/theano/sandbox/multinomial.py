@@ -285,7 +285,7 @@ class MultinomialFromUniform_MeanField(Op):
         pvals, unis, n = ins
         (gz,) = outgrads
         return [T.zeros_like(x, dtype=theano.config.floatX) if x.dtype in
-                T.discrete_dtypes else identity_grad_estimator(gz) for x in ins]
+                T.discrete_dtypes else identity_grad_estimator([x, gz]) for x in ins]
 
 
 class MultinomialFromUniform_StraightThrough(Op):
@@ -363,17 +363,24 @@ class MultinomialFromUniform_StraightThrough(Op):
         (gz,) = outgrads
 
         return [T.zeros_like(x, dtype=theano.config.floatX) if x.dtype in
-                T.discrete_dtypes else identity_grad_estimator(gz)*out.astype('float32') for x in ins]
+                T.discrete_dtypes else identity_grad_estimator([x, gz*out.astype('float32')]) for x in ins]
 
 
 class Identity_grad_estimator(theano.Op):
-    def make_node(self, dy):
+    def make_node(self, inps):
+        inp, dy = inps
+
         if dy.type.ndim not in (1, 2) \
                 or dy.type.dtype not in T.float_dtypes:
             raise ValueError('dy must be 1-d or 2-d tensor of floats. Got ',
                              dy.type)
         if dy.ndim == 1:
             dy = T.shape_padleft(dy, n_ones=1)
+        elif dy.ndim == 2:
+            if inp.ndim == 1:
+                dy = T.sum(dy, axis=0)
+
+
         return theano.Apply(self, [dy], [dy.type()])
 
     def perform(self, node, input_storage, output_storage, params=None):

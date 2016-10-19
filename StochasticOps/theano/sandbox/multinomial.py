@@ -275,11 +275,17 @@ class MultinomialFromUniform_MeanField(Op):
 
         # Vectorized version that is much faster as all the looping is
         # done in C even if this make extra work.
+        max_val = z[0].shape[1] - 1
         for c in range(n_samples):
             for n in range(nb_multi):
                 unis_n = unis[c * nb_multi + n]
-                cumsum = pvals[n].cumsum(dtype='float64')
-                z[0][n, numpy.searchsorted(cumsum, unis_n)] += 1
+                cumsum = pvals[n].cumsum(dtype='float32')
+
+                # Very rarely (i.e. once in a million training examples) the cumsum runs out of bounds.
+                # This might be due to rounding errors in some component (maybe Numpy?).
+                # To protect against errors, we force the extracted index to always be within bounds.
+                #z[0][n, numpy.searchsorted(cumsum, unis_n)] += 1
+                z[0][n, min(numpy.searchsorted(cumsum, unis_n), max_val)] += 1
 
     def grad(self, ins, outgrads):
         pvals, unis, n = ins
@@ -348,11 +354,17 @@ class MultinomialFromUniform_StraightThrough(Op):
 
         # Vectorized version that is much faster as all the looping is
         # done in C even if this make extra work.
+        max_val = z[0].shape[1] - 1
         for c in range(n_samples):
             for n in range(nb_multi):
                 unis_n = unis[c * nb_multi + n]
-                cumsum = pvals[n].cumsum(dtype='float64')
-                z[0][n, numpy.searchsorted(cumsum, unis_n)] += 1
+                cumsum = pvals[n].cumsum(dtype='float32')
+
+                # Very rarely (i.e. once in a million training examples) the cumsum runs out of bounds.
+                # This might be due to rounding errors in some component (maybe Numpy?).
+                # To protect against errors, we force the extracted index to always be within bounds.
+                #z[0][n, numpy.searchsorted(cumsum, unis_n)] += 1
+                z[0][n, min(numpy.searchsorted(cumsum, unis_n), max_val)] += 1
 
     def grad(self, ins, outgrads):
         pvals, unis, n = ins
